@@ -1,0 +1,74 @@
+@import "tailwindcss/theme";
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
+
+/* Light theme */
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Poppins', sans-serif;
+
+  --color-primary: #4a90e2;      /* bright but soft blue */
+  --color-secondary: #6fa8dc;    /* lighter blue for accents/buttons */
+  --color-accent: #8cb4f0;       /* accent for badges/callouts */
+  --color-background: #f9fafc;   /* slightly cool light background */
+  --color-foreground: #1e293b;   /* dark slate text */
+  --color-border: #d8dee9;       /* soft gray-blue border */
+  --color-muted: #64748b;        /* muted gray-blue text */
+  --color-error: #ef4444;        /* red accent */
+  --color-success: #10b981;      /* green accent */
+  --color-warning: #f59e0b;      /* amber accent */
+  --color-info: #4a90e2;         /* info blue */
+  --color-hover: #3b82f6;        /* vibrant hover blue */
+
+  --color-surface: #ffffff;      /* card background */
+  --color-surface-alt: #eef2f7;  /* subtle alternate surface */
+}
+
+/* Dark theme */
+html.dark {
+  --color-primary: #60a5fa;      /* light blue accent */
+  --color-secondary: #3b82f6;
+  --color-accent: #8cb4f0;
+  --color-background: #111827;   /* near-black slate */
+  --color-foreground: #f3f4f6;   /* near-white text */
+  --color-border: #334155;       /* muted border */
+  --color-muted: #94a3b8;
+  --color-error: #f87171;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-hover: #2563eb;        /* saturated blue hover */
+
+  --color-surface: #1e293b;      /* cards/panels */
+  --color-surface-alt: #27364a;  /* subtle depth */
+}
+
+
+
+
+/* Ocean custom theme */
+html.theme-ocean {
+  --color-primary: #0ea5e9;      
+  --color-secondary: #06b6d4;    
+  --color-background: #0f172a;   
+  --color-foreground: #e0f2fe;   
+  --color-accent: #22d3ee;       
+}
+
+
+html {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+body {
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+}
+
+
+
+
