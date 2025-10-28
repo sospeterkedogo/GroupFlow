@@ -2,7 +2,7 @@
 **Purpose-built collaboration platform for university computing group projects**  
 Next.js · Supabase · Tailwind · GitHub integration · Real-time contribution tracking
 
-> GroupFlow helps student teams plan tasks, track individual contributions, manage academic citations, and run project milestones — without duct-taping WhatsApp, Google Docs, and GitHub together.
+> GroupFlow helps student teams plan tasks, track individual contributions, manage academic citations, and run project milestones without duct-taping WhatsApp, Google Docs, and GitHub together.
 
 ---
 
