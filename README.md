@@ -1,34 +1,60 @@
-🚀 Next.js + Supabase + Stripe SaaS Boilerplate
+# GroupFlow
+**Purpose-built collaboration platform for university computing group projects**  
+Next.js · Supabase · Tailwind · GitHub integration · Real-time contribution tracking
 
-A production-ready SaaS starter kit built with:
-⚡ Next.js 15 (App Router) – for fast, scalable frontend and serverless APIs
-🧩 Supabase – for authentication, database, and real-time subscriptions
-💳 Stripe – for tiered subscriptions and secure payments
+> GroupFlow helps student teams plan tasks, track individual contributions, manage academic citations, and run project milestones — without duct-taping WhatsApp, Google Docs, and GitHub together.
 
-Perfect for indie developers, startups, or teams who want to launch SaaS products in days, not weeks.
+---
 
-🔧 Core Features
-🔐 Authentication & Profiles – email/password, anonymous demo login, and role-based access
-💳 Stripe Integration – tier-based billing, webhook syncing, and user subscription states
-📨 Notifications System – real-time updates via Supabase Realtime
-⚙️ Clean Architecture – modular, shared context + hooks, and reusable components
-🎨 Polished UI – built with Tailwind CSS and shadcn/ui for a modern, elegant experience
-🧱 Extensible Boilerplate – easily clone, customize, or extend for new SaaS projects
+## Table of Contents
+- [About](#about)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Architecture & Folders](#architecture--folders)
+- [Pages & Components](#pages--components)
+- [Database Schema](#database-schema)
+- [API & Integrations](#api--integrations)
+- [Real-time & Contribution Tracking](#real-time--contribution-tracking)
+- [CI/CD & Deployment](#cicd--deployment)
+- [Contributing & License](#contributing--license)
+- [Contact](#contact)
 
-🧠 Why This Boilerplate?
-Most SaaS starters stop at “auth + payments.”
-This one goes further — built for scalability, maintainability, and multi-app workflows.
-Use it as your foundation to build, test, and deploy production-grade applications with zero friction.
+---
 
-⚙️ Tech Stack
-Next.js 15 – App Router + Server Actions
-Supabase – Auth, Database, and Realtime APIs
-Stripe – Payments, Subscriptions, and Webhooks
-Tailwind CSS / shadcn/ui – UI design system
-TypeScript + ESLint + Prettier – Code safety and formatting
+## About
+GroupFlow is a web app designed to reduce confusion and unfair workloads in student group projects by combining:
 
-🧩 Use Cases
-🧱 SaaS dashboards
-💼 Subscription-based platforms
-🧰 Internal tools
-🚀 Product demos or freemium apps
+- Task management
+- Contribution tracking
+- Citation management
+- Team communication
+- Analytics dashboard
+
+---
+
+## Features
+- **Kanban-style task boards** with milestones and deadlines  
+- **Per-user contribution logs** (Supabase events + optional GitHub commits)  
+- **Citation manager** for academic references  
+- **Team chat & threaded comments** (real-time with Supabase Realtime)  
+- **File attachments & version notes**  
+- **Analytics dashboard**: workload equity, contributions timeline, completion stats
+  
+---
+
+## Tech Stack
+- **Frontend:** Next.js, React  
+- **Styling:** Tailwind CSS  
+- **Backend:** Supabase (Auth, Postgres, Realtime, Storage)  
+- **Contribution tracking:** Supabase events + optional GitHub integration  
+- **CI/CD:** GitHub Actions → Vercel  
+- **Testing:** Jest + React Testing Library, Playwright  
+- **Monitoring:** Sentry, Supabase metrics
+
+---
+
+## Quick Start
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sospeterkedogo/groupflow.git
