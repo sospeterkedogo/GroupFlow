@@ -5,20 +5,20 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 
 const faqs = [
   {
-    question: 'What is MyApp?',
-    answer: 'MyApp is an all-in-one productivity platform designed to streamline team workflows, track progress, and improve collaboration across web and mobile devices.',
+    question: 'What is GroupFlow?',
+    answer: 'GroupFlow is an all-in-one productivity platform designed to streamline team workflows, track progress, and improve collaboration across web and mobile devices.',
   },
   {
-    question: 'How secure is MyApp?',
+    question: 'How secure is GroupFlow?',
     answer: 'We prioritize security with enterprise-grade encryption, secure authentication, and regular audits to ensure your data stays safe.',
   },
   {
-    question: 'Can I try MyApp for free?',
+    question: 'Can I try GroupFlow for free?',
     answer: 'Yes! We offer a 14-day free trial for new users, so you can explore all features before committing.',
   },
   {
-    question: 'Does MyApp integrate with other tools?',
-    answer: 'Absolutely. MyApp integrates with popular tools like Slack, Google Workspace, and more to streamline your workflow.',
+    question: 'Does GroupFlow integrate with other tools?',
+    answer: 'Absolutely. GroupFlow integrates with popular tools like Slack, Google Workspace, and more to streamline your workflow.',
   },
   {
     question: 'What pricing plans are available?',
@@ -38,7 +38,7 @@ export default function FAQSection() {
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-3xl font-bold text-primary mb-4 font-heading">Frequently Asked Questions</h2>
         <p className="text-secondary max-w-2xl mx-auto">
-          Answers to common questions about MyApp, our plans, and how you can get started.
+          Answers to common questions about GroupFlow, our plans, and how you can get started.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export default function FAQSection() {
         {faqs.map((faq, index) => (
           <div
             key={faq.question}
-            className="bg-foreground/5 dark:bg-background/40 rounded-xl border border-secondary/10 shadow-sm hover:shadow-md transition"
+            className="bg-foreground/5 dark:bg-background/40 rounded-xl border border-border shadow-sm hover:shadow-md transition"
           >
             <button
               className="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-primary hover:bg-foreground/10 rounded-xl transition"

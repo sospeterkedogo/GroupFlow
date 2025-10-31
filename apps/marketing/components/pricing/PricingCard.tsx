@@ -21,7 +21,7 @@ export default function PricingCard({
 }: PricingCardProps) {
   return (
     <div
-      className={`rounded-3xl border border-secondary/10 flex flex-col shadow-sm transition-all ${
+      className={`rounded-3xl border border-border flex flex-col shadow-sm transition-all ${
         highlight
           ? "bg-gradient-to-br from-primary/10 via-accent/5 to-secondary/10 scale-105 hover:shadow-lg"
           : "bg-background hover:shadow-md"

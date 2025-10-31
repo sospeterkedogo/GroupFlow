@@ -26,7 +26,7 @@ export function Button({ children, className, variant = 'default', ...props }: B
     danger: 'bg-error text-background hover:bg-error/90 focus:ring-error',
     success: 'bg-success text-background hover:bg-success/90 focus:ring-success',
     ghost: 'bg-transparent text-foreground hover:bg-muted focus:ring-primary',
-    outline: 'bg-transparent text-foreground border border-muted hover:bg-muted/10 focus:ring-primary',
+    outline: 'bg-transparent text-foreground border border-border hover:bg-muted/10 focus:ring-primary',
   }
 
   return (

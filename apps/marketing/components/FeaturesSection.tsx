@@ -19,7 +19,7 @@ export default function FeaturesSection() {
       <div className="max-w-6xl mx-auto text-center mb-12">
         <h2 className="text-3xl font-bold text-primary mb-4">What You Can Do</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          MyApp brings structure and simplicity to your daily work.
+          GroupFlow brings structure and simplicity to your daily work.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function FeaturesSection() {
         {features.map((f, i) => (
           <div
             key={i}
-            className="bg-background p-8 rounded-2xl shadow-sm border border-border/20 hover:shadow-md transition-all"
+            className="bg-background p-8 rounded-2xl shadow-sm border border-border hover:shadow-md transition-all"
           >
             <h3 className="text-xl font-semibold text-primary mb-2">
               {f.title}

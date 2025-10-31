@@ -13,8 +13,8 @@ interface RootLayoutProps {
 }
 
 export const metadata = {
-  title: "My SaaS - Marketing",
-  description: "Marketing pages"
+  title: "GroupFlow - Home",
+  description: "Home pages"
 }
 
 

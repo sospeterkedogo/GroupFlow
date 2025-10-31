@@ -11,7 +11,7 @@ export default function HeroSection() {
         </h1>
 
         <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 px-2">
-          MyApp helps you organize, collaborate, and stay productive — all in one clean interface.
+          GroupFlow helps you organize, collaborate, and stay productive all in one clean interface.
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">

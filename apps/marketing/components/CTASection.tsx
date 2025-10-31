@@ -8,7 +8,7 @@ export default function CTASection() {
         Ready to boost your productivity?
       </h2>
       <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-        Start using MyApp today — it’s fast, intuitive, and free to try.
+        Start using GroupFlow today its fast, intuitive, and free to try.
       </p>
       <Link href="/app">
         <Button className="font-semibold">

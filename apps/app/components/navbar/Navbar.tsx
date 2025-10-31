@@ -71,13 +71,7 @@ export default function AppNavbar() {
           
         />
         <HelpDropdown open={openDropdown} toggle={toggleDropdown} />
-        <ProfileDropdown
-          open={openDropdown}
-          toggle={toggleDropdown}
-          profile={profile}
-          user={user}
-          onLogout={handleLogout}
-        />
+        
       </div>
     </nav>
   )

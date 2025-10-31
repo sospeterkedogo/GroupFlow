@@ -27,7 +27,7 @@ export default function Navbar() {
           href="/"
           className="text-2xl font-bold font-heading text-primary hover:opacity-80 transition-opacity"
         >
-          My<span className="text-foreground">SaaS</span>
+          Group<span className="text-foreground">Flow</span>
         </Link>
 
         {/* Desktop Navigation */}

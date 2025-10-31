@@ -6,7 +6,7 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors">
       {/* Header */}
-      <section className="py-20 px-6 text-center border-b border-secondary/20">
+      <section className="py-20 px-6 text-center border-b border-border">
         <h1 className="text-5xl font-extrabold text-primary mb-4">Choose the Plan That Fits You</h1>
         <p className="max-w-2xl mx-auto text-lg text-secondary">
           No hidden fees, no contracts — just clear pricing built for real users.

@@ -4,13 +4,13 @@ export default function DocsPage() {
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors">
       {/* Header */}
-      <section className="py-24 px-6 text-center bg-gradient-to-b from-primary/5 to-background border-b border-border/30">
+      <section className="py-24 px-6 text-center bg-gradient-to-b from-primary/5 to-background border-b border-border">
         <h1 className="text-5xl font-extrabold text-primary mb-4 tracking-tight">
           Getting Started
         </h1>
         <p className="max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
           Learn how to make the most of{" "}
-          <span className="font-semibold text-primary">MyApp</span>. Here’s
+          <span className="font-semibold text-primary">GroupFlow</span>. Here’s
           everything you need to start using it effectively.
         </p>
       </section>
