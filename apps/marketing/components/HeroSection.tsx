@@ -4,7 +4,7 @@ import  DemoLoginButton  from './DemoLoginButton'
 
 export default function HeroSection() {
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 text-center bg-gradient-to-b from-primary/5 via-background to-background">
+    <section className="py-20 sm:py-28 px-4 sm:px-6 text-center bg-linear-to-b from-primary/5 via-background to-background">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary mb-4 leading-tight">
           Simplify your workflow.
