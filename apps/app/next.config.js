@@ -10,6 +10,9 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    disableNotFoundPrerender: true,
+  }
 }
 
 export default nextConfig
