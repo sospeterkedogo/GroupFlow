@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import clsx from 'clsx'
 
 export default function MobileDropdown({
   title,

@@ -44,8 +44,8 @@ export default function AccountPage() {
       setMessage('Profile updated successfully! 🎉')
       setTimeout(() => setMessage(''), 5000)
       await refreshProfile()
-    } catch (err: any) {
-      setMessage('Error: ' + err.message)
+    } catch (err: unknown) {
+      setMessage('Error: ' + (err as Error).message)
       setTimeout(() => setMessage(''), 5000)
     }
   }
@@ -56,8 +56,8 @@ export default function AccountPage() {
       setMessage('Password updated successfully! ✅')
       setTimeout(() => setMessage(''), 5000)
       setPassword('')
-    } catch (err: any) {
-      setMessage('Error: ' + err.message)
+    } catch (err: unknown) {
+      setMessage('Error: ' + (err as Error).message)
       setTimeout(() => setMessage(''), 5000)
     }
   }
@@ -68,8 +68,8 @@ export default function AccountPage() {
       await deleteAccount(user.id)
       await supabase.auth.signOut()
       router.replace('/auth/signup')
-    } catch (err: any) {
-      alert('Error deleting account: ' + err.message)
+    } catch (err: unknown) {
+      alert('Error deleting account: ' + (err as Error).message)
     }
   }
 
@@ -116,8 +116,8 @@ export default function AccountPage() {
       await refreshProfile()
       setMessage('Avatar removed.')
       setTimeout(() => setMessage(''), 5000)
-    } catch (err: any) {
-      alert('Error removing avatar: ' + err.message)
+    } catch (err: unknown) {
+      alert('Error removing avatar: ' + (err as Error).message)
     }
   }
 

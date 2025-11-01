@@ -1,7 +1,6 @@
 // components/ui/use-toast.tsx
 'use client'
 
-import { useState } from 'react'
 
 interface ToastOptions {
   title: string

@@ -1,8 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import { X, User, LogOut, FileText, Settings, HelpCircle, MessageSquare } from 'lucide-react'
+import { User, LogOut, MessageSquare } from 'lucide-react'
 import { BiQuestionMark } from 'react-icons/bi'
 
 

@@ -10,7 +10,6 @@ import { useNotifications } from '@/app/context/notificationsContext'
 import FeedbackDropdown from './FeedbackDropdown'
 import NotificationsDropdown from './NotificationsDropdown'
 import HelpDropdown from './HelpDropdown'
-import ProfileDropdown from './ProfileDropdown'
 
 export default function AppNavbar() {
   const supabase = createClient()

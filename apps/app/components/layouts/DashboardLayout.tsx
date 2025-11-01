@@ -1,6 +1,5 @@
 'use client'
 
-import Navbar from '../navbar/Navbar'
 import Sidebar from '../Sidebar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

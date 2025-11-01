@@ -18,8 +18,6 @@ import {
   // --- ICONS I HAD TO ADD ---
   Type,
   CheckSquare as CheckSquareIcon, // Renamed to avoid conflict
-  Users,
-  Calendar,
   ArrowRight,
   Trash2,
   Activity,

@@ -33,6 +33,11 @@ export default function AuthCallbackPage() {
         const { data: exchangeData, error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(window.location.href)
 
+        if (exchangeData) {
+          // If the exchange is successful, log in the user
+          console.log('Session exchanged successfully:', exchangeData)
+        }
+
         if (exchangeError) {
           // If the exchange fails (invalid/expired link), log and redirect
           console.error('Session exchange failed:', exchangeError)

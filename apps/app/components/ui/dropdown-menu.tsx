@@ -1,7 +1,7 @@
 // components/ui/dropdown-menu.tsx
 'use client'
 
-import { ReactNode, useState, useRef, useEffect } from 'react'
+import { ReactNode } from 'react'
 import clsx from 'clsx'
 
 interface DropdownMenuProps {
@@ -12,7 +12,7 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
   return <div className="relative inline-block text-left">{children}</div>
 }
 
-export function DropdownMenuTrigger({ children, asChild }: { children: ReactNode; asChild?: boolean }) {
+export function DropdownMenuTrigger({ children }: { children: ReactNode; asChild?: boolean }) {
   return <>{children}</>
 }
 

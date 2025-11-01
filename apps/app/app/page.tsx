@@ -4,7 +4,6 @@ import { useUser } from '@/app/context/userContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layouts/DashboardLayout'
-import { Button } from '@/components/ui/button'
 import { useNotifications } from '@/app/context/notificationsContext'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
@@ -51,7 +50,7 @@ const projects = [
 ]
 
 export default function PrivatePage() {
-  const { user, profile, loading } = useUser()
+  const { user, loading } = useUser()
   const router = useRouter()
   const { addNotification } = useNotifications()
   const [search, setSearch] = useState('')
@@ -89,6 +88,8 @@ export default function PrivatePage() {
     if (res.ok) addNotification(newNotif) // add only once
   }
 
+  
+
   const goToProject = () => {
     router.push('/projects')
   }
@@ -104,7 +105,7 @@ export default function PrivatePage() {
         </h1>
 
         <div className="flex gap-2">
-          <button className="flex items-center gap-1 px-3 py-1 text-foreground rounded-md hover:bg-hover transition-colors text-sm font-medium">
+          <button className="flex items-center gap-1 px-3 py-1 text-foreground rounded-md hover:bg-hover transition-colors text-sm font-medium" onClick={handleNotify}>
             <FiFilter className="w-4 h-4" />
             Filter
           </button>
