@@ -8,7 +8,7 @@ export default function DemoButton() {
     setLoading(true);
 
     // Redirect user to the main app demo page
-    window.location.href = 'http://localhost:3001/demo';
+    window.location.href = 'https://groupflow-livid.vercel.app/demo';
   };
 
   return (
