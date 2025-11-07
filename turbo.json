@@ -18,8 +18,12 @@
       "persistent": true
     }
   },
+  "globalEnv": [
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "DEMO_PASSWORD"
+  ],
   "globalDependencies": [
-    "$.env#SUPABASE_SERVICE_ROLE_KEY",
-    "$.env#DEMO_PASSWORD"
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "DEMO_PASSWORD"
   ]
 }
