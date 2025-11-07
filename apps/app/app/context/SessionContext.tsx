@@ -56,12 +56,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || 'null')
-    } catch (_error) { return null }
+    } catch (_error) {
+      return null
+    }
   })
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROJECTS_CACHE_KEY) || '[]')
-    } catch (_error) { return [] }
+    } catch (_error) {
+      return []
+    }
   })
   
   // 3. SET LOADING TO TRUE (This is the default)
@@ -119,8 +123,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.warn("Failed to save projects to localStorage:", error);
       }
-    } catch (err: any) {
-      console.error('Error fetching projects (stale data may be shown):', err.message)
+    } catch (err) {
+      console.error('Error fetching projects (stale data may be shown):', err instanceof Error ? err.message : 'An unknown error occurred')
       // DO NOT clear cache on network error
     } finally {
       // We will set this in the main effect

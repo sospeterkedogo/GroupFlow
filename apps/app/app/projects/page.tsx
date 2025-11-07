@@ -108,8 +108,10 @@ const initialBoardData = {
 // --- NEW DATA STORE ---
 // This is the *detailed* data for the modal.
 // Your simple board data is not enough.
-const modalDataStore: Record<string, any> = {
+const modalDataStore: Record<string, SelectedCardType> = {
   "card-research-report": {
+    title: "Finalize User Research Report", // Added missing title
+    listTitle: "In Progress", // Added missing listTitle
     // This ID matches the card in the "In Progress" list
     // This data PERFECTLY matches the image
     assignedMembers: [
@@ -194,7 +196,7 @@ interface CardProps {
     description: string;
     due: string;
   };
-  onClick: (card: any) => void;
+  onClick: (card: CardProps['card']) => void;
 }
 
 const Card = ({ card, onClick }: CardProps) => {
@@ -256,7 +258,7 @@ interface ListProps {
       due: string;
     }[];
   };
-  onCardClick: (card: any, listTitle: string) => void;
+  onCardClick: (card: CardProps['card'], listTitle: string) => void;
 }
 
 const List = ({ list, onCardClick }: ListProps) => {
@@ -435,7 +437,7 @@ const ActivityFeed = ({
             width={32}
             height={32}
             className="rounded-full h-8 w-8 mt-1"
-            onError={(e) => (e.currentTarget.src = "/default-avatar.png")} // Fallback
+            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => (e.currentTarget.src = "/default-avatar.png")} // Fallback
           />
           <div className="flex-1">
             <p className="text-sm">

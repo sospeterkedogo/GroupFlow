@@ -1,33 +1,111 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Bell, CheckSquare, Plus, X } from 'lucide-react'
 import clsx from 'clsx'
-import { useUser } from '@/app/context/userContext'
 import SidebarFooter from './SidebarFooter'
+import { useUser } from '@/app/context/userContext' // Using the context
+import { createClient } from '@/lib/supabase/client'
 
 interface Project {
   id: string
-  title: string
+  name: string
 }
 
 export default function Sidebar() {
-  const { } = useUser()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  
+  const [projects, setProjects] = useState<Project[]>([])
+  const [newProjectTitle, setNewProjectTitle] = useState('')
+  const [loading, setLoading] = useState(false) // For modal "create" button
+  const [error, setError] = useState<string | null>(null) 
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true)
+  
+  // 1. GET THE USER AND AUTH STATE *FROM THE CONTEXT*
+  const { user, loading: isAuthLoading } = useUser() 
+  const supabase = createClient()
 
-  // Example projects state; replace with actual dynamic state from database
-  const [projects, setProjects] = useState<Project[]>([
-    { id: '1', title: 'Project A' },
-    { id: '2', title: 'Project B' },
-  ])
+  // 2. THIS EFFECT *REACTS* TO THE USER STATE.
+  // When 'user' changes from null -> user, this re-runs.
+  useEffect(() => {
+    const fetchProjects = async () => {
+      // 3. If the context says there's no user, set projects to empty.
+      if (!user) {
+        setProjects([])
+        setIsProjectsLoading(false)
+        return
+      }
 
-  const handleAddProject = () => {
-    const newProject = { id: Date.now().toString(), title: `New Project ${projects.length + 1}` }
-    setProjects([...projects, newProject])
+      // 4. If we have a user, THEN fetch their projects.
+      setIsProjectsLoading(true)
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name')
+        .eq('created_by_user_id', user.id) // Use the user.id from context
+
+      if (error) {
+        console.error('Failed to fetch projects:', error)
+        setError('Failed to load projects')
+        setProjects([])
+      } else {
+        setProjects(data || [])
+      }
+      setIsProjectsLoading(false)
+    }
+    
+    // 5. Don't run this fetch until the main auth is even done.
+    if (!isAuthLoading) {
+      fetchProjects()
+    }
+
+  }, [user, isAuthLoading, supabase]) // Dependencies are key!
+  
+  const handleOpenModal = () => {
+    setError(null) 
+    setIsModalOpen(true)
   }
+  
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setNewProjectTitle('')
+    setError(null)
+  }
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newProjectTitle.trim()) return
+    setLoading(true)
+    setError(null) 
+    try {
+     const res = await fetch('/api/projects', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ title: newProjectTitle.trim() }),
+     }) 
+     if (!res.ok) {
+       const errData = await res.json()
+       throw new Error(errData.error || 'Failed to create project')
+     }  
+     // --- THIS IS THE FIX... AGAIN ---
+     // Your API route returns the project *directly*,
+     // not wrapped in a { project: ... } object.
+     const newProject: Project = await res.json()
+     
+     setProjects([...projects, newProject])
+     handleCloseModal()
+    } 
+    catch (err) {
+       console.error(err)
+       const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+       setError(errorMessage)
+    } finally {
+       setLoading(false)
+    }
+   }
 
   return (
     <>
@@ -39,11 +117,13 @@ export default function Sidebar() {
         <X className="w-5 h-5" />
       </button>
 
-      {/* Overlay */}
-      {isOpen && (
+      {(isOpen || isModalOpen) && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false)
+            handleCloseModal()
+          }}
         />
       )}
 
@@ -72,7 +152,6 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
-          {/* Top buttons */}
           <Link
             href="/"
             className={clsx(
@@ -82,7 +161,6 @@ export default function Sidebar() {
           >
             <Home className="w-5 h-5" /> Dashboard
           </Link>
-
           <Link
             href="/tasks"
             className={clsx(
@@ -92,12 +170,11 @@ export default function Sidebar() {
           >
             <CheckSquare className="w-5 h-5" /> My Tasks
           </Link>
-
           <Link
             href="/activity"
             className={clsx(
               'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
-              pathname === '/notifications' ? 'bg-primary text-background' : 'text-secondary hover:bg-muted hover:text-foreground'
+              pathname === '/activity' ? 'bg-primary text-background' : 'text-secondary hover:bg-muted hover:text-foreground'
             )}
           >
             <Bell className="w-5 h-5" /> Activity
@@ -107,24 +184,34 @@ export default function Sidebar() {
           <div className="mt-4">
             <p className="px-3 py-1 text-xs text-muted uppercase font-semibold mt-8">Projects</p>
             <div className="flex flex-col space-y-1">
-              {projects.map((project) => (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  className={clsx(
-                    'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
-                    pathname === `/projects/${project.id}`
-                      ? 'bg-primary text-background'
-                      : 'text-secondary hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  {project.title}
-                </Link>
-              ))}
+              {/* This now correctly waits for auth, THEN shows a loading state, 
+                THEN shows the projects.
+              */}
+              {isAuthLoading || isProjectsLoading ? (
+                  <p className="px-3 py-2 text-sm text-muted">Loading projects...</p>
+              ) : error ? (
+                  <p className="px-3 py-2 text-sm text-red-500">{error}</p>
+              ) : projects.length === 0 ? (
+                  <p className="px-3 py-2 text-sm text-muted">No projects yet.</p>
+              ) : (
+                projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.id}`}
+                    className={clsx(
+                      'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
+                      pathname === `/projects/${project.id}`
+                        ? 'bg-primary text-background'
+                        : 'text-secondary hover:bg-muted hover:text-foreground'
+                    )}
+                  >
+                    {project.name}
+                  </Link>
+                ))
+              )}
 
-              {/* Add New Project button */}
               <button
-                onClick={handleAddProject}
+                onClick={handleOpenModal}
                 className="flex items-center gap-3 px-3 py-2 rounded-md font-medium text-secondary hover:bg-muted hover:text-foreground transition-colors"
               >
                 <Plus className="w-5 h-5" /> Add New Project
@@ -133,9 +220,49 @@ export default function Sidebar() {
           </div>
         </nav>
 
-        {/* Footer */}
+        {/* This will *still* show its own loading state until the 
+          master 'isAuthLoading' (from your context) is false.
+        */}
         <SidebarFooter />
       </aside>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="bg-background rounded-lg shadow-lg p-6 w-96 relative z-50">
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-3 right-3 text-muted hover:text-foreground"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">Create New Project</h2>
+            <form onSubmit={handleCreateProject} className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Project Name"
+                className="border border-border rounded-md px-3 py-2"
+                value={newProjectTitle}
+                onChange={(e) => setNewProjectTitle(e.target.value)}
+                required
+              />
+              
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+              
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-primary text-background px-4 py-2 rounded-md font-semibold hover:opacity-80 transition-opacity disabled:opacity-50"
+              >
+                {loading ? 'Creating...' : 'Create Project'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }

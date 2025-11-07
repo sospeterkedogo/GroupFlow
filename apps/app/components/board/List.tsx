@@ -128,7 +128,7 @@ export default function ListComponent({ list, onCardClick, onAddCard, onEdit, on
            Actually attach the onClick handler to the button. */}
       <button 
         onClick={onAddCard}
-        className="flex items-center gap-2 w-full text-left p-2 mt-3 rounded-md text-muted hover:bg-border  border-dashed border border-border/10 hover:text-background transition-colors"
+        className="flex items-center gap-2 w-full text-left p-2 mt-3 rounded-md text-muted hover:bg-border  border-dashed border border-border hover:text-background transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add a card
