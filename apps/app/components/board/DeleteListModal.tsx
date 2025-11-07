@@ -33,7 +33,7 @@ export default function DeleteListModal({ listTitle, cardCount, onClose, onConfi
           <h2 className="text-lg font-semibold">Delete List</h2>
         </div>
         <p className="text-muted-foreground text-sm mb-4">
-          Are you sure you want to delete the list "<strong>{listTitle}</strong>"? 
+          Are you sure you want to delete the list &quot;<strong>{listTitle}</strong>&quot;? 
           All <strong>{cardCount}</strong> card(s) in this list will also be permanently deleted. 
           This action cannot be undone.
         </p>

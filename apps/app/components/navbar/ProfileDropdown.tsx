@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { User, LogOut, MessageSquare } from 'lucide-react'
 import { BiQuestionMark } from 'react-icons/bi'
+import { User as SupabaseUser } from '@supabase/supabase-js'
 
 
 interface Profile {
@@ -13,7 +14,7 @@ interface Profile {
 
 interface Props {
   profile: Profile
-  user: any
+  user: SupabaseUser | null
   onLogout: () => void
   onClose: () => void // called to close dropdown when clicking X or links
 }

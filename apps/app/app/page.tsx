@@ -4,7 +4,6 @@
 import { useSession } from '@/app/context/SessionContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import Image from 'next/image'
 import { FiFilter } from 'react-icons/fi'
 import { BiSortAlt2 } from 'react-icons/bi'
 import DashboardLayout from '@/components/layouts/DashboardLayout' // Assuming this is correct
@@ -58,7 +57,7 @@ export default function DashboardPage() {
         day: '2-digit',
         year: 'numeric',
       })
-    } catch (e) {
+    } catch (_error) {
       return 'Invalid date'
     }
   }

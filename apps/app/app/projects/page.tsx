@@ -183,7 +183,21 @@ const Tag = ({ text, type }: { text: string; type: string }) => {
 };
 
 // --- Card Component (Your original, with one fix) ---
-const Card = ({ card, onClick }: any) => {
+interface CardProps {
+  card: {
+    id: string;
+    title: string;
+    tags: { id: string; text: string; type: string }[];
+    comments: number;
+    attachments: number;
+    assignees: string[];
+    description: string;
+    due: string;
+  };
+  onClick: (card: any) => void;
+}
+
+const Card = ({ card, onClick }: CardProps) => {
   return (
     <div
       className="bg-background p-4 rounded-lg border border-border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
@@ -193,7 +207,7 @@ const Card = ({ card, onClick }: any) => {
       <span className="text-foreground font-medium">{card.title}</span>
       <div className="flex justify-between items-center mt-2">
         <div className="flex flex-wrap items-center gap-2 text-muted">
-          {card.tags.map((tag: any) => (
+          {card.tags.map((tag: { id: string; text: string; type: string }) => (
             <Tag key={tag.id} text={tag.text} type={tag.type} />
           ))}
           {card.comments > 0 && (
@@ -227,7 +241,25 @@ const Card = ({ card, onClick }: any) => {
 };
 
 // --- List Component (Your original, with one fix) ---
-const List = ({ list, onCardClick }: any) => {
+interface ListProps {
+  list: {
+    id: string;
+    title: string;
+    cards: {
+      id: string;
+      title: string;
+      tags: { id: string; text: string; type: string }[];
+      comments: number;
+      attachments: number;
+      assignees: string[];
+      description: string;
+      due: string;
+    }[];
+  };
+  onCardClick: (card: any, listTitle: string) => void;
+}
+
+const List = ({ list, onCardClick }: ListProps) => {
   return (
     <div className="shrink-0 w-80 bg-surface-alt bg-opacity-30 p-3 rounded-lg shadow-sm self-start">
       <div className="flex justify-between items-center mb-4 px-1">
@@ -242,7 +274,16 @@ const List = ({ list, onCardClick }: any) => {
         </button>
       </div>
       <div className="flex flex-col gap-3 pr-1">
-        {list.cards.map((card: any) => (
+        {list.cards.map((card: {
+          id: string;
+          title: string;
+          tags: { id: string; text: string; type: string }[];
+          comments: number;
+          attachments: number;
+          assignees: string[];
+          description: string;
+          due: string;
+        }) => (
           <Card
             key={card.id}
             card={card}
@@ -280,7 +321,7 @@ const AvatarStack = ({
         width={32}
         height={32}
         className="rounded-full border-2 border-background"
-        onError={(e) => (e.currentTarget.src = "/default-avatar.png")} // Fallback
+        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => (e.currentTarget.src = "/default-avatar.png")} // Fallback
       />
     ))}
     <button className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-alt text-muted hover:bg-surface-alt border-2 border-background">
@@ -420,7 +461,27 @@ const ActivityFeed = ({
   );
 };
 
-const Modal = ({ card, onClose }: any) => {
+interface ModalProps {
+  card: {
+    title: string;
+    listTitle: string;
+    assignedMembers: { avatar: string; name: string; id: number }[];
+    dueDate: string;
+    description: string;
+    checklist: { title: string; items: { id: number; text: string; isDone: boolean }[] };
+    activity: {
+      id: number;
+      type: string;
+      user: { name: string; avatar: string };
+      timestamp: string;
+      content: string;
+    }[];
+    currentUserAvatar: string;
+  } | null;
+  onClose: () => void;
+}
+
+const Modal = ({ card, onClose }: ModalProps) => {
   if (!card) return null;
 
   // Destructure the *detailed* data.
@@ -646,14 +707,41 @@ const BoardHeader = () => {
 // --- 
 // --- Main App: MODIFIED TO USE THE NEW DATA ---
 // --- 
+
+interface SelectedCardType {
+  title: string;
+  listTitle: string;
+  assignedMembers: { avatar: string; name: string; id: number }[];
+  dueDate: string;
+  description: string;
+  checklist: { title: string; items: { id: number; text: string; isDone: boolean }[] };
+  activity: {
+    id: number;
+    type: string;
+    user: { name: string; avatar: string };
+    timestamp: string;
+    content: string;
+  }[];
+  currentUserAvatar: string;
+}
+
 export default function App() {
-  const [board, setBoard] = useState(initialBoardData);
-  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [board] = useState(initialBoardData);
+  const [selectedCard, setSelectedCard] = useState<SelectedCardType | null>(null);
 
   // *** THIS IS THE CRITICAL CHANGE ***
   // It now finds DETAILED data from the modalDataStore
   // instead of just passing the simple card data.
-  const handleCardClick = (card: any, listTitle: string) => {
+  const handleCardClick = (card: {
+    id: string;
+    title: string;
+    tags: { id: string; text: string; type: string }[];
+    comments: number;
+    attachments: number;
+    assignees: string[];
+    description: string;
+    due: string;
+  }, listTitle: string) => {
     // 1. Find detailed data from our new store
     const detailedData = modalDataStore[card.id];
 

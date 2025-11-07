@@ -12,14 +12,13 @@ import { useState } from 'react' // We need state for the "Add List" input
 interface BoardProps {
   lists: List[]
   onCardClick: (card: Card, listTitle: string) => void
-  onAddCard: (listId: string) => void // <-- This is the prop you forgot
-  onAddList: (title: string) => void // <-- This is the *other* prop you forgot
-  onEdit: (listId: string, title: string) => void
+  onAddCard: (listId: string) => void
+  onAddList: (title: string) => void
   onEditList: (listId: string, title: string) => void
   onDelete: (listId: string) => void
 }
 
-export default function Board({ lists, onCardClick, onAddCard, onAddList, onEdit, onEditList, onDelete }: BoardProps) {
+export default function Board({ lists, onCardClick, onAddCard, onAddList, onEditList, onDelete }: BoardProps) {
   // This state is fine to live here, as it only controls
   // the visibility of the "Add List" input, which is
   // a UI concern *within* the Board.

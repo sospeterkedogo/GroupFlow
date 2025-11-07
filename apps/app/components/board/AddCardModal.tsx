@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, List } from '@/lib/types'
-import { X, Type, Clock, AlertOctagon, ArrowUp, ArrowDown } from 'lucide-react'
+import { List } from '@/lib/types'
+import { X, AlertOctagon, ArrowUp, ArrowDown } from 'lucide-react'
 
 type Priority = 'low' | 'medium' | 'high'
 
@@ -86,9 +86,10 @@ export default function AddCardModal({ list, onClose, onSubmit }: AddCardModalPr
         due_date: dueDate || null
       })
       onClose() // Let the parent close on success
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      setError(err.message || 'Failed to create card.')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create card.';
+      setError(errorMessage || 'Failed to create card.')
     } finally {
       setIsSubmitting(false)
     }

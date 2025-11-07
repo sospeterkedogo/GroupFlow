@@ -1,7 +1,6 @@
 'use client'
 
-import { LayoutGrid, Search, MoreHorizontal, UserPlus, Edit, Trash2 } from 'lucide-react'
-import Image from 'next/image'
+import { LayoutGrid, MoreHorizontal, UserPlus, Edit, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 // 1. THIS IS THE NEW "CONTRACT" FOR THIS COMPONENT.

@@ -22,7 +22,7 @@ export default function DeleteProjectModal({ projectName, onClose, onConfirm }: 
       <div className="bg-background rounded-lg shadow-lg p-6 w-96">
         <h2 className="text-lg font-semibold mb-2">Delete Project</h2>
         <p className="text-muted-foreground text-sm mb-4">
-          Are you sure you want to delete the project "<strong>{projectName}</strong>"? 
+          Are you sure you want to delete the project &quot;<strong>{projectName}</strong>&quot;? 
           This action is permanent and cannot be undone.
         </p>
         <div className="flex justify-end gap-2 mt-6">

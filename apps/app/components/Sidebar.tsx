@@ -14,7 +14,7 @@ interface Project {
 }
 
 export default function Sidebar() {
-  const { user } = useUser()
+  const { } = useUser()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 

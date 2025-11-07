@@ -155,7 +155,7 @@ export default function CardModal({
   if (!card) return null
 
   const {
-    id: cardId,
+    id, // Use 'id' directly from card
     assignees,
     due_date,
     priority,
@@ -167,11 +167,11 @@ export default function CardModal({
   // --- Handlers that just call the parent (page.tsx) ---
   
   const handleDescriptionSave = (newDesc: string) => {
-    return onUpdateCard(cardId, { description: newDesc })
+    return onUpdateCard(card.id, { description: newDesc })
   }
   
   const handleTitleSave = (newTitle: string) => {
-    return onUpdateCard(cardId, { title: newTitle })
+    return onUpdateCard(card.id, { title: newTitle })
   }
   
   const handleSidebarUpdate = (updates: { 
@@ -179,11 +179,11 @@ export default function CardModal({
     priority?: string | null,
     list_id?: string 
   }) => {
-    return onUpdateCard(cardId, updates)
+    return onUpdateCard(card.id, updates)
   }
   
   const handleSidebarDelete = () => {
-    return onDeleteCard(cardId)
+    return onDeleteCard(card.id)
   }
   
   const handleSidebarAttach = () => {
@@ -192,15 +192,15 @@ export default function CardModal({
   }
   
   const handleCommentAdd = (cardId: string , content: string) => {
-    return onAddComment(cardId, content)
+    return onAddComment(card.id, content)
   }
   
   const handleChecklistItemUpdate = (checklistId: string, itemId: string, updates: { text?: string; is_done?: boolean }) => {
-    return onUpdateChecklistItem(cardId, checklistId, itemId, updates)
+    return onUpdateChecklistItem(card.id, checklistId, itemId, updates)
   }
 
   const handleChecklistItemDelete = (checklistId: string, itemId: string) => {
-    return onDeleteChecklistItem(cardId, checklistId, itemId)
+    return onDeleteChecklistItem(card.id, checklistId, itemId)
   }
   
 
@@ -293,7 +293,7 @@ export default function CardModal({
                   {checklists.map(cl => (
                     <ChecklistComponent 
                       key={cl.id}
-                      cardId={cardId}
+                      cardId={card.id}
                       checklist={cl} 
                       onUpdateItem={(itemId, updates) => handleChecklistItemUpdate(cl.id, itemId, updates)}
                       onDeleteItem={(itemId) => handleChecklistItemDelete(cl.id, itemId)}
@@ -317,7 +317,7 @@ export default function CardModal({
 
               {/* Modular Activity */}
               <ModalActivity
-                cardId={cardId}
+                cardId={card.id}
                 activity={activity || []}
                 onAddComment={handleCommentAdd}
               />

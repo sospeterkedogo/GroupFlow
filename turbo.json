@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "SUPABASE_SERVICE_ROLE_KEY", "DEMO_PASSWORD"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "lint": {
@@ -17,5 +17,9 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalDependencies": [
+    "$.env#SUPABASE_SERVICE_ROLE_KEY",
+    "$.env#DEMO_PASSWORD"
+  ]
 }

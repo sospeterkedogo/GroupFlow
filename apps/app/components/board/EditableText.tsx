@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Check, X } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface EditableTextProps {
   initialValue: string

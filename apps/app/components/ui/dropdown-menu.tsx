@@ -30,7 +30,12 @@ export function DropdownMenuContent({ children, className, align = 'end' }: { ch
   )
 }
 
-export function DropdownMenuItem({ children, className, ...props }: any) {
+interface DropdownMenuItemProps extends React.ComponentPropsWithoutRef<'button'> {
+  children: ReactNode;
+  className?: string;
+}
+
+export function DropdownMenuItem({ children, className, ...props }: DropdownMenuItemProps) {
   return (
     <button
       className={clsx('w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors', className)}

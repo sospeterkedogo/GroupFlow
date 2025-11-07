@@ -56,12 +56,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || 'null')
-    } catch (e) { return null }
+    } catch (_error) { return null }
   })
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROJECTS_CACHE_KEY) || '[]')
-    } catch (e) { return [] }
+    } catch (_error) { return [] }
   })
   
   // 3. SET LOADING TO TRUE (This is the default)
@@ -189,7 +189,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   
   // --- (addProject function is fine) ---
-  const addProject = async (newProject: {
+  const addProject = useCallback(async (newProject: {
     title: string
     course: string | null
     due_date: string | null
@@ -216,7 +216,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     
     return projectFromApi
-  }
+  }, [projects, setProjects])
 
   const value: SessionContextType = {
     user,

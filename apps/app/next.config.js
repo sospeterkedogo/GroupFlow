@@ -11,7 +11,6 @@ const nextConfig = {
     ],
   },
   experimental: {
-    disableNotFoundPrerender: true,
   }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { MessageSquare, Paperclip, Clock, AlertOctagon, ArrowUp, ArrowDown, CheckCircle, CheckSquare as CheckSquareIcon } from 'lucide-react'
+import { MessageSquare, Clock, AlertOctagon, ArrowUp, ArrowDown, CheckCircle, CheckSquare as CheckSquareIcon } from 'lucide-react'
 import { Card } from '@/lib/types' // Imports the contract
 import { JSX } from 'react'
 export { Tag }
@@ -49,7 +49,6 @@ interface CardProps {
 export default function CardComponent({ card, onClick }: CardProps) {
   // Derive counts from the REAL data
   const commentsCount = card.activity?.filter(a => a.type === 'comment').length || 0
-  const attachmentsCount = 0 // Your schema still doesn't support this
   const assignees = card.assignees || []
   
   const allChecklistItems = card.checklists?.flatMap(c => c.items) || []
