@@ -22,9 +22,9 @@ export default function ThemeToggle() {
       className="p-2 rounded-full hover:bg-muted transition-colors flex items-center justify-center"
     >
       {currentTheme === "dark" ? (
-        <Sun className="w-5 h-5 text-yellow-400" />
+        <Sun className="w-5 h-5 text-warning" />
       ) : (
-        <Moon className="w-5 h-5 text-gray-700" />
+        <Moon className="w-5 h-5 text-muted" />
       )}
     </button>
   )
