@@ -8,13 +8,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@repo/ui": "*",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
-    "@supabase/auth-helpers-react": "^0.5.0",
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.78.0",
     "@tailwindcss/postcss": "^4.1.16",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
@@ -26,7 +26,6 @@
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "stripe": "^19.1.0",
-    "tailwind": "^2.3.1",
     "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
@@ -37,6 +36,6 @@
     "@types/react-dom": "19.1.1",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.34.0",
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   }
 }
