@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
@@ -34,7 +34,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
 
-  const fetchProfile = async (u: User | null) => {
+  const fetchProfile = useCallback(async (u: User | null) => {
     if (!u?.id) {
       setProfile(null)
       return
@@ -63,7 +63,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
 
     setProfile(mergedProfile)
-  }
+  }, [supabase])
 
   const refreshProfile = async () => {
     await fetchProfile(user)
@@ -97,7 +97,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [fetchProfile, supabase.auth])
 
   const value: UserContextType = {
     user,
