@@ -229,7 +229,7 @@ const Card = ({ card, onClick }: any) => {
 // --- List Component (Your original, with one fix) ---
 const List = ({ list, onCardClick }: any) => {
   return (
-    <div className="shrink-0 w-80 bg-[rgba(255,255,255,0.02)] bg-opacity-30 p-3 rounded-lg shadow-sm self-start">
+    <div className="shrink-0 w-80 bg-surface-alt bg-opacity-30 p-3 rounded-lg shadow-sm self-start">
       <div className="flex justify-between items-center mb-4 px-1">
         <h2 className="flex items-center gap-2 font-medium text-foreground">
           {list.title}
@@ -279,11 +279,11 @@ const AvatarStack = ({
         alt={member.name}
         width={32}
         height={32}
-        className="rounded-full border-2 border-white"
+        className="rounded-full border-2 border-background"
         onError={(e) => (e.currentTarget.src = "/default-avatar.png")} // Fallback
       />
     ))}
-    <button className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 border-2 border-white">
+    <button className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-alt text-muted hover:bg-surface-alt border-2 border-background">
       +
     </button>
   </div>
@@ -302,13 +302,13 @@ const DueDate = ({ dateString }: { dateString: string }) => {
 
   if (isOverdue) {
     return (
-      <span className="bg-red-100 text-red-700 text-sm font-medium px-3 py-1 rounded-md">
+      <span className="bg-error/10 text-error text-sm font-medium px-3 py-1 rounded-md">
         Overdue: {formattedDate.replace(", 2025", "")} {/* Match image */}
       </span>
     );
   }
   return (
-    <span className="bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1 rounded-md">
+    <span className="bg-surface-alt text-foreground text-sm font-medium px-3 py-1 rounded-md">
       {formattedDate}
     </span>
   );
@@ -331,14 +331,14 @@ const Checklist = ({
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-foreground">
           Checklist ({doneItems}/{totalItems})
         </h3>
       </div>
       {/* Progress Bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-surface-alt rounded-full h-2">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          className="bg-primary h-2 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -351,12 +351,12 @@ const Checklist = ({
               id={`item-${item.id}`}
               checked={item.isDone}
               readOnly // In a real app, this would have an onChange
-              className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-primary bg-surface-alt border-border rounded focus:ring-primary"
             />
             <label
               htmlFor={`item-${item.id}`}
               className={`text-sm ${
-                item.isDone ? "line-through text-gray-500" : "text-gray-800"
+                item.isDone ? "line-through text-muted" : "text-foreground"
               }`}
             >
               {item.text}
@@ -381,7 +381,7 @@ const ActivityFeed = ({
   }[];
 }) => {
   if (!activity || activity.length === 0) {
-    return <p className="text-sm text-gray-500">No activity yet.</p>;
+    return <p className="text-sm text-muted">No activity yet.</p>;
   }
 
   return (
@@ -400,16 +400,16 @@ const ActivityFeed = ({
             <p className="text-sm">
               <span className="font-bold">{item.user.name}</span>{" "}
               {item.type === "action" ? (
-                <span className="text-gray-600">{item.content}</span>
+                <span className="text-muted">{item.content}</span>
               ) : (
                 ""
               )}
-              <span className="text-xs text-gray-400 ml-2">
+              <span className="text-xs text-muted-foreground ml-2">
                 {item.timestamp}
               </span>
             </p>
             {item.type === "comment" && (
-              <div className="bg-white border border-gray-200 rounded-lg p-3 mt-1 text-sm text-gray-700 shadow-sm">
+              <div className="bg-surface border border-border rounded-lg p-3 mt-1 text-sm text-foreground shadow-sm">
                 {item.content}
               </div>
             )}
@@ -437,7 +437,7 @@ const Modal = ({ card, onClose }: any) => {
   } = card;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 p-4">
       {/* Main modal card: Using your theme's background */}
       <div className="bg-background rounded-xl w-full max-w-5xl h-[90vh] flex flex-col relative overflow-hidden shadow-2xl">
         {/* Close Button */}
@@ -549,7 +549,7 @@ const Modal = ({ card, onClose }: any) => {
                   <div className="flex-1 space-y-2">
                     <textarea
                       placeholder="Add a comment..."
-                      className="w-full p-3 rounded-md border border-border bg-white text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                      className="w-full p-3 rounded-md border border-border bg-surface text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                       rows={3}
                     />
                     <button className="px-4 py-2 bg-primary text-background rounded-md text-sm font-medium hover:bg-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
@@ -613,7 +613,7 @@ const AppHeader = () => {
               className="w-8 h-8 rounded-full"
             />
           </div>
-          <button className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-(--color-hover) transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+          <button className="px-4 py-2 bg-primary text-background text-sm font-medium rounded-md shadow-sm hover:bg-hover transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
             Invite
           </button>
         </div>
@@ -635,7 +635,7 @@ const BoardHeader = () => {
           Filter
         </button>
         <button className="flex items-center gap-2 px-4 py-2 bg-background border border-border text-sm font-medium rounded-md shadow-sm hover:bg-border/50 transition-colors">
-          <ArrowUpDown className="w-4 h-4 text-muted" />
+          <ArrowUpDown className="w-4 h-4" />
           Sort
         </button>
       </div>

@@ -54,7 +54,7 @@ const ActivityFeed = () => {
         <h1 className="text-3xl font-heading font-extrabold text-foreground">
           Activity Feed
         </h1>
-        <button className="px-4 py-2 bg-primary text-white rounded hover:bg-hover transition">
+        <button className="px-4 py-2 bg-primary text-background rounded hover:bg-hover transition">
           Mark all as read
         </button>
       </div>
@@ -86,7 +86,7 @@ const ActivityFeed = () => {
             <div
               key={activity.id}
               className={`flex items-center justify-between p-4 rounded border border-border ${
-                activity.unread ? "bg-accent/10" : "bg-white"
+                activity.unread ? "bg-accent/10" : "bg-surface"
               }`}
             >
               <div className="flex items-center space-x-4">
