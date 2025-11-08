@@ -137,60 +137,74 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile])
 
+  const checkUserOnNavigate = useCallback(async () => {
+    // Only set the *master* loading spinner on the initial page load.
+    // This solves the "flicker" on subsequent navigations.
+    if (isInitialLoad.current) {
+      setLoading(true)
+    }
+
+    try {
+      // Get the session. This is fast and will catch the
+      // server-side login redirect *before* the dashboard page
+      // can make a bad redirect decision.
+      const { data: { session } } = await supabase.auth.getSession()
+      const newUser = session?.user ?? null
+      setUser(newUser)
+
+      if (newUser) {
+        // User is found. Fetch their data in parallel.
+        await Promise.all([
+          fetchProfile(newUser),
+          fetchProjects()
+        ])
+      } else {
+        // No user. Clear everything.
+        setProfile(null)
+        setProjects([])
+        localStorage.removeItem(PROFILE_CACHE_KEY)
+        localStorage.removeItem(PROJECTS_CACHE_KEY)
+      }
+    } catch (error) {
+      console.error("Error in session check:", error)
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        // This is a network error, so we don't log the user out.
+        // We just keep the stale data.
+        return
+      }
+      // If anything else fails, log out completely.
+      
+      setProfile(null)
+      setProjects([])
+      setUser(null)
+      localStorage.removeItem(PROFILE_CACHE_KEY)
+      localStorage.removeItem(PROJECTS_CACHE_KEY)
+    } finally {
+      // This is GUARANTEED to run.
+      // This fixes your "stuck loading" crash.
+      setLoading(false)
+      setProjectsLoading(false) // Always turn this off too
+      
+      // Mark the initial load as done.
+      isInitialLoad.current = false
+    }
+  }, [fetchProfile, fetchProjects, supabase])
+
   // --- 7. THE ONE ROBUST USEEFFECT ---
   // This runs ONCE on mount, and AGAIN on *every navigation*.
   useEffect(() => {
-    const checkUserOnNavigate = async () => {
-      // Only set the *master* loading spinner on the initial page load.
-      // This solves the "flicker" on subsequent navigations.
-      if (isInitialLoad.current) {
-        setLoading(true)
-      }
-
-      try {
-        // Get the session. This is fast and will catch the
-        // server-side login redirect *before* the dashboard page
-        // can make a bad redirect decision.
-        const { data: { session } } = await supabase.auth.getSession()
-        const newUser = session?.user ?? null
-        setUser(newUser)
-
-        if (newUser) {
-          // User is found. Fetch their data in parallel.
-          await Promise.all([
-            fetchProfile(newUser),
-            fetchProjects()
-          ])
-        } else {
-          // No user. Clear everything.
-          setProfile(null)
-          setProjects([])
-          localStorage.removeItem(PROFILE_CACHE_KEY)
-          localStorage.removeItem(PROJECTS_CACHE_KEY)
-        }
-      } catch (error) {
-        console.error("Error in session check:", error)
-        // If anything fails, log out completely.
-        
-        setProfile(null)
-        setProjects([])
-        setUser(null)
-        localStorage.removeItem(PROFILE_CACHE_KEY)
-        localStorage.removeItem(PROJECTS_CACHE_KEY)
-      } finally {
-        // This is GUARANTEED to run.
-        // This fixes your "stuck loading" crash.
-        setLoading(false)
-        setProjectsLoading(false) // Always turn this off too
-        
-        // Mark the initial load as done.
-        isInitialLoad.current = false
-      }
-    }
-
     checkUserOnNavigate()
-    
-  }, [pathname, fetchProfile, fetchProjects, supabase]) // Re-run on navigation
+  }, [pathname, checkUserOnNavigate])
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      checkUserOnNavigate()
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [supabase, checkUserOnNavigate])
 
   
   // --- (addProject function is fine) ---

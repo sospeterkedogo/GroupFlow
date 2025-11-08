@@ -108,6 +108,16 @@ const ChecklistComponent = ({
           </div>
         ))}
         {/* TODO: Add "Add an item" button here */}
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="new-item"
+            className="w-5 h-5 text-primary bg-surface border-border rounded focus:ring-primary"
+          />
+          <label htmlFor="new-item" className="text-sm flex-1 text-foreground">
+            New item
+          </label>
+        </div>
       </div>
     </div>
   )
@@ -220,11 +230,11 @@ export default function CardModal({
           <X size={24} />
         </button>
 
-        <div className="flex-1 p-8 overflow-y-auto">
-          <div className="grid grid-cols-3 gap-8">
+        <div className="flex-1 p-8 overflow-y-auto flex flex-col h-full">
+          <div className="grid grid-cols-3 gap-8 flex-1 min-h-0">
             
             {/* --- LEFT COLUMN (Content) --- */}
-            <div className="col-span-3 md:col-span-2 space-y-8 border-r border-border pr-8">
+            <div className="col-span-3 md:col-span-2 space-y-8 border-r border-border pr-8 overflow-y-auto">
               
               {/* Title (Now Editable) */}
               <EditableText
@@ -304,7 +314,7 @@ export default function CardModal({
             </div>
 
             {/* --- RIGHT COLUMN (Actions & Activity) --- */}
-            <div className="col-span-3 md:col-span-1 space-y-6">
+            <div className="col-span-3 md:col-span-1 flex flex-col flex-1 min-h-0 space-y-6 overflow-hidden">
               
               {/* Modular Sidebar */}
               <ModalSidebar
@@ -316,11 +326,13 @@ export default function CardModal({
               />
 
               {/* Modular Activity */}
+              <div className="flex flex-col flex-1 min-h-0">
               <ModalActivity
                 cardId={card.id}
                 activity={activity || []}
                 onAddComment={handleCommentAdd}
               />
+              </div>
 
             </div>
           </div>

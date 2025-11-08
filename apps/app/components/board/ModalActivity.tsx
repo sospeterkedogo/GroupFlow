@@ -29,9 +29,12 @@ const ActivityFeed = ({ activity }: { activity: Activity[] }) => {
   if (!activity || activity.length === 0) {
     return <p className="text-sm text-muted">No activity yet.</p>
   }
+  // Sort the activity array by created_at in ascending order
+  const sortedActivity = [...activity].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
   return (
-    <div className="space-y-4">
-      {activity.map((item) => (
+    <div className="space-y-4 overflow-y-auto pr-2">
+      {sortedActivity.map((item) => (
         <div key={item.id} className="flex gap-3">
           <Image
             src={item.user_avatar_url || "/default-avatar.png"}
@@ -93,17 +96,19 @@ export default function ModalActivity({ cardId, activity, onAddComment }: ModalA
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 flex flex-col h-full">
       <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
         <ActivityIcon size={20} />
         Activity
       </h3>
 
-      {/* Activity Feed */}
+        {/* scrollable area */}
+    <div className="flex-1 overflow-y-auto pr-2 min-h-[200px]">
       <ActivityFeed activity={activity || []} />
+    </div>
 
       {/* Comment Box */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 ">
         <Image
           src={profile?.avatar_url || "/default-avatar.png"}
           alt="Current User"
