@@ -87,8 +87,8 @@ export default function HelpPage() {
           {filtered.map((topic) => (
             <div key={topic.id} className="p-4 border rounded-xl hover:border-accent transition">
               <h2 className="text-xl font-semibold text-primary">{topic.title}</h2>
-              <p className="text-sm text-gray-500 mb-2">{topic.description}</p>
-              <p className="text-gray-700 whitespace-pre-line">{topic.content}</p>
+              <p className="text-sm text-muted mb-2">{topic.description}</p>
+              <p className="text-foreground whitespace-pre-line">{topic.content}</p>
               {topic.href && (
                 <Link
                   href={topic.href}
@@ -104,7 +104,7 @@ export default function HelpPage() {
 
       <div className="mt-12 text-center">
         <h3 className="text-lg font-semibold mb-2 text-primary">Still stuck?</h3>
-        <p className="text-gray-600">
+        <p className="text-muted">
           Contact support or report an issue directly from{" "}
           <Link href="/feedback" className="text-accent hover:underline">
             the feedback page

@@ -18,7 +18,15 @@ export const config = [
       turbo: turboPlugin,
     },
     rules: {
-      "turbo/no-undeclared-env-vars": "warn",
+      "turbo/no-undeclared-env-vars": [
+        "warn",
+        {
+          allowList: [
+            "SUPABASE_SERVICE_ROLE_KEY",
+            "DEMO_PASSWORD"
+          ],
+        },
+      ],
     },
   },
   {

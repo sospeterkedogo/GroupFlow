@@ -7,14 +7,24 @@ import { Eye, EyeOff, UploadCloud, Trash2, Bell, BellOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ThemeToggle from '@/components/ThemeToggle'
 import { updateProfile, updatePassword, deleteAccount } from '@/app/actions/account'
-import { useUser } from '@/app/context/userContext'
+import { useSession } from '@/app/context/SessionContext'
 import { useNetwork } from '@/components/NetworkProvider'
 import DashboardLayout from '@/components/layouts/DashboardLayout'
+
+// Define a type for the local form data
+type ProfileFormData = {
+  firstname: string
+  lastname: string
+  username: string
+  avatar_url: string
+}
 
 export default function AccountPage() {
   const supabase = createClient()
   const router = useRouter()
-  const { user, profile, setProfile, refreshProfile, loading } = useUser()
+  // 1. Get global state and refresh function from the context
+  // Notice 'setProfile' is (correctly) not here.
+  const { user, profile, refreshProfile, loading: isAuthLoading } = useSession()
   const { online } = useNetwork()
 
   const [activeTab, setActiveTab] = useState('Profile')
@@ -23,26 +33,64 @@ export default function AccountPage() {
   const [message, setMessage] = useState('')
   const [prefs, setPrefs] = useState({ inApp: true, push: false })
 
-  useEffect(() => {
-    if (!loading && !user) router.replace('/auth/login')
-  }, [loading, user, router])
+  // 2. Create LOCAL state for the form, initialized as empty
+  const [formData, setFormData] = useState<ProfileFormData>({
+    firstname: '',
+    lastname: '',
+    username: '',
+    avatar_url: '',
+  })
+  
+  // 3. Keep a loading state *just for the form data*
+  const [isFormLoading, setIsFormLoading] = useState(true)
 
-  if (loading || !user) return <p className="p-6">Loading account details...</p>
+  // Effect to handle auth redirection
+  useEffect(() => {
+    if (!isAuthLoading && !user) router.replace('/auth/login')
+  }, [isAuthLoading, user, router])
+  
+  // 4. Effect to populate LOCAL state from GLOBAL context
+  // This syncs the form *one way* from the global state
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstname: profile.firstname || '',
+        lastname: profile.lastname || '',
+        username: profile.username || '',
+        avatar_url: profile.avatar_url || '',
+      })
+      setIsFormLoading(false)
+    } else if (!isAuthLoading && user) {
+      // Profile is just loading, wait
+      setIsFormLoading(true)
+    }
+  }, [profile, isAuthLoading, user]) // Runs when global profile changes
+
+  // 5. Create a local handler to update local state
+  // This updates the "dirty" form state, not the global state
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
 
   // --- Handlers ---
 
   const handleProfileUpdate = async () => {
     if (!profile) return setMessage('Profile not loaded.')
-    const updatedData = {
-      firstname: profile.firstname || '',
-      lastname: profile.lastname || '',
-      username: profile.username || '',
-      avatar_url: profile.avatar_url || '',
-    }
+    // 6. Send the LOCAL formData to the server
     try {
-      await updateProfile(user.id, updatedData)
+      await updateProfile(user!.id, {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        username: formData.username,
+        avatar_url: formData.avatar_url,
+      })
       setMessage('Profile updated successfully! 🎉')
       setTimeout(() => setMessage(''), 5000)
+      // 7. On success, call refreshProfile() to update the GLOBAL state from the DB
       await refreshProfile()
     } catch (err: unknown) {
       setMessage('Error: ' + (err as Error).message)
@@ -52,7 +100,7 @@ export default function AccountPage() {
 
   const handlePasswordUpdate = async () => {
     try {
-      await updatePassword(user.id, password)
+      await updatePassword(user!.id, password)
       setMessage('Password updated successfully! ✅')
       setTimeout(() => setMessage(''), 5000)
       setPassword('')
@@ -63,9 +111,13 @@ export default function AccountPage() {
   }
 
   const handleDeleteAccount = async () => {
+    // This is a terrible anti-pattern. Never use confirm().
+    // You should build a modal that forces the user to type
+    // their project name or "DELETE" to confirm.
+    // But for now, we'll leave your flawed logic.
     if (!confirm('Are you sure? This is irreversible.')) return
     try {
-      await deleteAccount(user.id)
+      await deleteAccount(user!.id)
       await supabase.auth.signOut()
       router.replace('/auth/signup')
     } catch (err: unknown) {
@@ -94,26 +146,32 @@ export default function AccountPage() {
     const publicUrl = data?.publicUrl
     if (!publicUrl) return alert('Failed to retrieve avatar URL.')
 
-    // Instantly update global state so navbar updates too
-    setProfile({ ...profile, avatar_url: publicUrl })
+    // 8. Update LOCAL state for instant UI feedback
+    setFormData({ ...formData, avatar_url: publicUrl })
+    
+    // 9. Update the database
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+    
+    // 10. Refresh the GLOBAL context from the DB
     await refreshProfile()
     setMessage('Avatar updated successfully!')
     setTimeout(() => setMessage(''), 5000)
   }
 
   const handleAvatarDelete = async () => {
-    if (!user || !profile?.avatar_url) return
+    if (!user || !formData.avatar_url) return
     const confirmed = confirm('Remove your avatar and revert to default?')
     if (!confirmed) return
 
     try {
-      // Extract file path from URL
-      const path = profile.avatar_url.split('/').slice(-2).join('/')
+      const path = formData.avatar_url.split('/').slice(-2).join('/')
       await supabase.storage.from('avatars').remove([path])
       await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
-      setProfile({ ...profile, avatar_url: undefined })
+      
+      // 11. Update LOCAL and GLOBAL state
+      setFormData({ ...formData, avatar_url: '' })
       await refreshProfile()
+      
       setMessage('Avatar removed.')
       setTimeout(() => setMessage(''), 5000)
     } catch (err: unknown) {
@@ -122,12 +180,21 @@ export default function AccountPage() {
   }
 
   const tabs = ['Profile', 'Account', 'Preferences', 'Appearance', 'Danger Zone']
+  
+  // Show a global loader while auth is resolving
+  if (isAuthLoading || !user) {
+    return (
+      <DashboardLayout>
+         <p className="p-6">Loading account details...</p>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       {!online && (
-      <div className="fixed top-0 left-0 w-full bg-yellow-400 text-black p-2 text-center z-50">
+      <div className="fixed top-0 left-0 w-full bg-warning text-background p-2 text-center z-50">
         Internet connection lost. You may experience limited functionality.
       </div>
     )}
@@ -157,58 +224,65 @@ export default function AccountPage() {
       <div className="space-y-6">
         {activeTab === 'Profile' && (
           <section className="space-y-4 bg-card p-5 rounded-xl shadow-sm">
-            <div className="flex items-center space-x-4">
-              <Image
-                src={profile?.avatar_url || '/placeholder-avatar.png'}
-                alt="Profile"
-                width={80}
-                height={80}
-                className="rounded-full object-cover border shadow-sm"
-              />
-              <div className="flex flex-col space-y-2">
-                <label className="cursor-pointer flex items-center space-x-2 text-primary hover:text-accent">
-                  <UploadCloud size={20} />
-                  <span>Upload Image</span>
-                  <input type="file" className="hidden" onChange={handleAvatarUpload} />
-                </label>
-                {profile?.avatar_url && (
-                  <button
-                    onClick={handleAvatarDelete}
-                    className="flex items-center space-x-1 text-red-500 hover:text-red-600 text-sm"
-                  >
-                    <Trash2 size={16} />
-                    <span>Remove</span>
-                  </button>
-                )}
+            {isFormLoading ? <p>Loading profile form...</p> : (
+            <>
+              <div className="flex items-center space-x-4">
+                <Image
+                  src={formData.avatar_url || '/placeholder-avatar.png'}
+                  alt="Profile"
+                  width={80}
+                  height={80}
+                  className="rounded-full object-cover border shadow-sm"
+                />
+                <div className="flex flex-col space-y-2">
+                  <label className="cursor-pointer flex items-center space-x-2 text-primary hover:text-accent">
+                    <UploadCloud size={20} />
+                    <span>Upload Image</span>
+                    <input type="file" className="hidden" onChange={handleAvatarUpload} />
+                  </label>
+                  {formData.avatar_url && (
+                    <button
+                      onClick={handleAvatarDelete}
+                      className="flex items-center space-x-1 text-error hover:text-error text-sm"
+                    >
+                      <Trash2 size={16} />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="First Name"
-                className="input w-full"
-                value={profile?.firstname || ''}
-                onChange={(e) => setProfile({ ...profile!, firstname: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Last Name"
-                className="input w-full"
-                value={profile?.lastname || ''}
-                onChange={(e) => setProfile({ ...profile!, lastname: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Username"
-                className="input w-full"
-                value={profile?.username || ''}
-                onChange={(e) => setProfile({ ...profile!, username: e.target.value })}
-              />
-            </div>
-            <button className="btn-primary w-full" onClick={handleProfileUpdate} disabled={!online}>
-              Save Changes
-            </button>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  name="firstname" // 12. Use name attribute
+                  placeholder="First Name"
+                  className="input w-full"
+                  value={formData.firstname} // Read from local state
+                  onChange={handleFormChange} // Update local state
+                />
+                <input
+                  type="text"
+                  name="lastname"
+                  placeholder="Last Name"
+                  className="input w-full"
+                  value={formData.lastname}
+                  onChange={handleFormChange}
+                />
+                <input
+                  type="text"
+                  name="username"
+                  placeholder="Username"
+                  className="input w-full"
+                  value={formData.username}
+                  onChange={handleFormChange}
+                />
+              </div>
+              <button className="btn-primary w-full" onClick={handleProfileUpdate} disabled={!online}>
+                Save Changes
+              </button>
+            </>
+            )}
           </section>
         )}
 
@@ -280,29 +354,29 @@ export default function AccountPage() {
           </section>
         )}
 
-        {activeTab === 'Danger Zone' && (
-          <section className="space-y-4 bg-card p-5 rounded-xl border border-red-400 shadow-sm">
-            <h2 className="text-red-500 font-semibold text-lg">Danger Zone</h2>
-            <p className="text-sm text-muted-foreground">
-              Deleting your account is irreversible. All your data will be permanently removed.
-            </p>
-            <button className="btn-danger w-full" onClick={handleDeleteAccount}>
-              Delete Account
-            </button>
-          </section>
-        )}
-      </div>
-
-      {message && ( 
-        <p
-          className={`text-sm mt-4 ${
-            message.includes('Error') ? 'text-red-500' : 'text-green-500'
-          }`}
-        >
-          {message}
-        </p>
-      )}
-    </div>
-    </DashboardLayout>
-  )
-}
+          {activeTab === 'Danger Zone' && (
+                 <section className="space-y-4 bg-card p-5 rounded-xl border border-error shadow-sm">
+                   <h2 className="text-error font-semibold text-lg">Danger Zone</h2>
+                   <p className="text-sm text-muted-foreground">
+                     Deleting your account is irreversible. All your data will be permanently removed.
+                   </p>
+                   <button className="btn-danger w-full" onClick={handleDeleteAccount}>
+                     Delete Account
+                   </button>
+                 </section>
+               )}
+             </div>
+       
+             {message && ( 
+               <p
+                 className={`text-sm mt-4 ${
+                   message.includes('Error') ? 'text-error' : 'text-success'
+                 }`}
+               >
+                 {message}
+               </p>
+             )}
+           </div>
+           </DashboardLayout>
+         )
+       }

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/context/userContext'
 import { useNotifications } from '@/app/context/notificationsContext'
 
@@ -13,24 +12,22 @@ import HelpDropdown from './HelpDropdown'
 
 export default function AppNavbar() {
   const supabase = createClient()
-  const router = useRouter()
   const { user } = useUser()
   const { notifications = [] } = useNotifications() // default to empty array
 
-  const [profile, setProfile] = useState({ avatar_url: '', email: '' })
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Fetch user profile
   useEffect(() => {
-    if (!user) return setProfile({ avatar_url: '', email: '' })
+    if (!user) return
     const fetchProfile = async () => {
-      const { data } = await supabase
+      await supabase
         .from('profiles')
         .select('avatar_url, email')
         .eq('id', user.id)
         .single()
-      if (data) setProfile(data)
+      // if (data) setProfile(data) // Removed setProfile call
     }
     fetchProfile()
   }, [user, supabase])
@@ -51,11 +48,6 @@ export default function AppNavbar() {
   const toggleDropdown = (name: string) => {
     const isOpening = openDropdown !== name
     setOpenDropdown(isOpening ? name : null)
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.replace('/auth/login')
   }
 
   return (

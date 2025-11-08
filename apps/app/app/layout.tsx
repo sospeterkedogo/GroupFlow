@@ -3,6 +3,7 @@ import ThemeProviderWrapper from "../components/ThemeProviderWrapper"
 import { UserProvider } from "./context/userContext"
 import { NetworkProvider } from "@/components/NetworkProvider"
 import { Inter, Poppins } from 'next/font/google'
+import { SessionProvider } from "../app/context/SessionContext"
 import { NotificationsProvider } from "./context/notificationsContext"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -20,9 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NetworkProvider>
           <ThemeProviderWrapper>
             <UserProvider>
-              <NotificationsProvider>
-                {children}
-              </NotificationsProvider>
+              <SessionProvider>
+                <NotificationsProvider>
+                  {children}
+                </NotificationsProvider>
+              </SessionProvider>
             </UserProvider>
           </ThemeProviderWrapper>
         </NetworkProvider>

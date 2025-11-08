@@ -92,7 +92,7 @@ export default function SignupPage() {
         </div>
 
         {/* Error Message */}
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        {error && <p className="text-error text-sm text-center">{error}</p>}
 
         {/* Submit */}
         <div className="flex flex-col space-y-3">

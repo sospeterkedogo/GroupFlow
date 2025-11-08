@@ -23,7 +23,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         <ThemeProviderWrapper>
           <Navbar />
-          {children}
+          {children && <main>{children}</main>}
           <Footer />
         </ThemeProviderWrapper>
       </body>

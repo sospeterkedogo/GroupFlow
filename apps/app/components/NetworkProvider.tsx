@@ -9,9 +9,10 @@ interface NetworkContextType {
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
 
 export function NetworkProvider({ children }: { children: ReactNode }) {
-  const [online, setOnline] = useState<boolean>(navigator.onLine)
+  const [online, setOnline] = useState<boolean>(true)
 
   useEffect(() => {
+    setOnline(navigator.onLine)
     const goOnline = () => setOnline(true)
     const goOffline = () => setOnline(false)
 

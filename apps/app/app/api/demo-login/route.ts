@@ -31,8 +31,9 @@ export async function GET() {
 
     console.log('Demo login successful');
     return NextResponse.json({ session: data.session });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Unexpected error in demo-login route:', err);
-    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Internal Server Error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

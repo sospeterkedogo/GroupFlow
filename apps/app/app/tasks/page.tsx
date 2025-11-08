@@ -33,59 +33,37 @@ interface Task {
 const TaskItem = ({ task }: { task: Task }) => {
   const { title, project, projectColor, dueDate, isCompleted } = task;
 
-  const dueDateColorMap: { [key: string]: string } = {
-    "Due: Yesterday": "var(--color-error)",
-    "Due: Today": "var(--color-muted)",
-    "Due: Tomorrow": "var(--color-muted)",
-    "Due: Oct 26": "var(--color-muted)",
-  };
-
-  const projectColorMap: { [key: string]: string } = {
-    accent: "var(--color-accent)",
-    secondary: "var(--color-secondary)",
-    info: "var(--color-info)",
-    warning: "var(--color-warning)",
-    primary: "var(--color-primary)",
-  };
+  const dueDateClass =
+    dueDate === "Due: Yesterday"
+      ? "text-error"
+      : "text-muted";
 
   return (
     <div
-      className="flex items-center justify-between p-4 rounded-lg shadow-sm border"
-      style={{
-        backgroundColor: 'var(--color-background)',
-        borderColor: 'var(--color-border)',
-        opacity: isCompleted ? 0.7 : 1,
-      }}
+      className={`flex items-center justify-between p-4 rounded-lg shadow-sm border ${
+        isCompleted ? "opacity-70" : ""
+      } bg-background border-border`}
     >
       <div className="flex items-center gap-3">
         <input
           type="checkbox"
           checked={isCompleted}
           readOnly
-          className="h-5 w-5 rounded focus:ring-2"
-          style={{
-            accentColor: 'var(--color-primary)',
-            borderColor: 'var(--color-border)',
-          }}
+          className="h-5 w-5 rounded focus:ring-2 accent-primary border-border"
         />
         <div>
           <p
-            className="font-medium"
-            style={{
-              color: isCompleted ? 'var(--color-muted)' : 'var(--color-foreground)',
-              textDecoration: isCompleted ? 'line-through' : 'none',
-            }}
+            className={`font-medium ${
+              isCompleted ? "text-muted line-through" : "text-foreground"
+            }`}
           >
             {title}
           </p>
           <div className="flex items-center gap-1.5 mt-1">
             <span
-              className="h-2 w-2 rounded-full"
-              style={{
-                backgroundColor: projectColorMap[projectColor] || 'var(--color-muted)',
-              }}
+              className={`h-2 w-2 rounded-full bg-${projectColor}`}
             ></span>
-            <span className="text-sm" style={{ color: 'var(--color-muted)' }}>
+            <span className="text-sm text-muted">
               {project}
             </span>
           </div>
@@ -94,21 +72,14 @@ const TaskItem = ({ task }: { task: Task }) => {
 
       {isCompleted ? (
         <span
-          className="flex items-center gap-1.5 text-sm font-medium px-2 py-0.5 rounded-full"
-          style={{
-            color: 'var(--color-success)',
-            backgroundColor: 'var(--color-border)',
-          }}
+          className="flex items-center gap-1.5 text-sm font-medium px-2 py-0.5 rounded-full text-success bg-border"
         >
           <Check className="w-4 h-4" />
           Done
         </span>
       ) : (
         <span
-          className="text-sm font-medium"
-          style={{
-            color: dueDateColorMap[dueDate] || 'var(--color-muted)',
-          }}
+          className={`text-sm font-medium ${dueDateClass}`}
         >
           {dueDate}
         </span>
