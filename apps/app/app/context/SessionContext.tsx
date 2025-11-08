@@ -7,13 +7,13 @@ import {
   useState,
   ReactNode,
   useCallback,
-  useRef, // 1. BRINGING THIS BACK
+  useRef, 
 } from 'react'
-import { usePathname } from 'next/navigation' // 2. BRINGING THIS BACK
+import { usePathname } from 'next/navigation' 
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
-// --- (Interfaces are fine) ---
+// --- (Interfaces) ---
 export interface Project {
   id: string
   name: string
@@ -36,7 +36,7 @@ interface SessionContextType {
   profile: Profile | null
   projects: Project[]
   loading: boolean // Master auth loading
-  projectsLoading: boolean // Projects loading
+  projectsLoading: boolean 
   addProject: (newProject: {
     title: string
     course: string | null
@@ -56,16 +56,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || 'null')
-    } catch (_error) {
-      return null
-    }
+    } catch (_error) { return null }
   })
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       return JSON.parse(localStorage.getItem(PROJECTS_CACHE_KEY) || '[]')
-    } catch (_error) {
-      return []
-    }
+    } catch (_error) { return [] }
   })
   
   // 3. SET LOADING TO TRUE (This is the default)
@@ -77,7 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const isInitialLoad = useRef(true) // Tracks the *very first* load
 
   // 5. "OFFLINE-AWARE" FETCHPROFILE
-  // This version will NOT clear your cache on a network error.
+  // This version will NOT clear cache on a network error.
   const fetchProfile = useCallback(async (u: User) => {
     console.log("Fetching profile for user:", u.id)
     const { data, error } = await supabase
@@ -123,8 +119,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.warn("Failed to save projects to localStorage:", error);
       }
-    } catch (err) {
-      console.error('Error fetching projects (stale data may be shown):', err instanceof Error ? err.message : 'An unknown error occurred')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Error fetching projects (stale data may be shown):', err.message)
+      } else {
+        console.error('An unknown error occurred while fetching projects:', err)
+      }
       // DO NOT clear cache on network error
     } finally {
       // We will set this in the main effect
@@ -171,6 +171,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Error in session check:", error)
         // If anything fails, log out completely.
+        
         setProfile(null)
         setProjects([])
         setUser(null)
