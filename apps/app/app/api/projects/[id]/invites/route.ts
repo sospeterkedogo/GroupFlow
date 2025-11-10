@@ -5,7 +5,7 @@ const VALID_PROJECT_ROLES = ['owner', 'admin', 'member', 'viewer']
 
 export async function POST(
   req: Request,
-  { params }: { params: { projectId: string } }
+  context: { params: { projectId: string } }
 ) {
   try {
     const supabase = await createClient()
@@ -18,7 +18,7 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const { projectId } = params
+    const { projectId } = context.params
     const { email, role } = await req.json()
 
     // --- VALIDATION ---
