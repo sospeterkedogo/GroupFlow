@@ -4,17 +4,21 @@
 import { useSession } from '@/app/context/SessionContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
+import {Menu } from 'lucide-react'
 import { FiFilter } from 'react-icons/fi'
 import { BiSortAlt2 } from 'react-icons/bi'
-import DashboardLayout from '@/components/layouts/DashboardLayout' // Assuming this is correct
+import DashboardLayout from '@/components/layouts/DashboardLayout'
+import {useSidebar} from '@/app/context/SidebarContext' 
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { 
     user, 
     loading: isAuthLoading, 
     projects, 
     projectsLoading 
   } = useSession()
+
+  const { setIsOpen } = useSidebar()
   
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -65,10 +69,12 @@ export default function DashboardPage() {
   // If we get here, we either have a user, or we are
   // revalidating in the background. Either way, we render the page.
   return (
-    <DashboardLayout>
       <div className="p-8 bg-background min-h-screen font-sans">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
+          {/* Button to toggle sidebar in sm devices */}
+          
+
           <h1 className="text-3xl font-heading text-foreground font-extrabold">
             Project Dashboard
           </h1>
@@ -76,11 +82,11 @@ export default function DashboardPage() {
             <button
               className="flex items-center gap-1 px-3 py-1 text-foreground rounded-md hover:bg-hover transition-colors text-sm font-medium"
             >
-              <FiFilter className="w-4 h-4" />
+              <FiFilter size={16} />
               Filter
             </button>
             <button className="flex items-center gap-1 px-3 py-1 text-foreground rounded-md hover:bg-hover transition-colors text-sm font-medium">
-              <BiSortAlt2 className="w-4 h-4" />
+              <BiSortAlt2 size={16} />
               Sort
             </button>
           </div>
@@ -161,6 +167,13 @@ export default function DashboardPage() {
           })}
         </div>
       </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <DashboardLayout>
+      <DashboardContent />
     </DashboardLayout>
   )
 }

@@ -9,7 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { updateProfile, updatePassword, deleteAccount } from '@/app/actions/account'
 import { useSession } from '@/app/context/SessionContext'
 import { useNetwork } from '@/components/NetworkProvider'
-import DashboardLayout from '@/components/layouts/DashboardLayout'
+import DashboardLayout  from '@/components/layouts/DashboardLayout'
 
 // Define a type for the local form data
 type ProfileFormData = {

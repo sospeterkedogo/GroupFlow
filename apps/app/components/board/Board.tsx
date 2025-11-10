@@ -3,7 +3,7 @@
 // This component is DUMB. It just renders what it's given.
 // It imports the List component and passes props to it.
 
-import { Droppable, Draggable } from '@hello-pangea/dnd'
+import { Droppable, Draggable, DroppableProvided } from '@hello-pangea/dnd'
 import ListComponent from '@/components/board/List' // Make sure this path is correct
 import { Plus } from 'lucide-react'
 import { List, Card } from '@/lib/types' // Your types file
@@ -36,7 +36,7 @@ export default function Board({ lists, onCardClick, onAddCard, onAddList, onEdit
   return (
     <main className="flex flex-1 gap-4 overflow-x-auto p-4 md:px-8 pb-4 w-full">
       <Droppable droppableId="board" type="list" direction="horizontal">
-        {(provided) => (
+        {(provided: DroppableProvided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}

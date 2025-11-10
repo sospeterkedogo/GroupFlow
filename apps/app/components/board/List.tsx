@@ -1,6 +1,4 @@
-'use client'
-
-import { Droppable, Draggable } from '@hello-pangea/dnd'
+import { Droppable, Draggable, DroppableProvided } from '@hello-pangea/dnd'
 import CardComponent from './Card' // Renamed to avoid name collision
 import { MoreHorizontal, Plus, Trash2, Edit } from 'lucide-react'
 import { List, Card } from '@/lib/types' // 1. IMPORT YOUR ACTUAL TYPES
@@ -77,7 +75,7 @@ export default function ListComponent({ list, onCardClick, onAddCard, onEdit, on
                 }}
                 className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted"
             >
-                <BsPersonAdd className="w-4 h-4" />
+                <BsPersonAdd size={16} />
                 Assign Members
             </button>
             <button
@@ -105,7 +103,7 @@ export default function ListComponent({ list, onCardClick, onAddCard, onEdit, on
       </div>
       
       <Droppable droppableId={list.id} type="card">
-        {(provided) => (
+        {(provided: DroppableProvided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}

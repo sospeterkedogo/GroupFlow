@@ -1,16 +1,17 @@
-import "./output.css"
-import ThemeProviderWrapper from "../components/ThemeProviderWrapper"
+import "./globals.css"
+import ThemeProviderWrapper from "../components/ThemeProviderWrapper" // Uncomment this line
 import { UserProvider } from "./context/userContext"
 import { NetworkProvider } from "@/components/NetworkProvider"
 import { Inter, Poppins } from 'next/font/google'
 import { SessionProvider } from "../app/context/SessionContext"
 import { NotificationsProvider } from "./context/notificationsContext"
+// import { ThemeProvider } from "next-themes" // Import ThemeProvider directly
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-heading' })
 
 export const metadata = {
-  title: "My SaaS - App",
+  title: "GroupFlow",
   description: "Landing and app pages"
 }
 
@@ -19,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <NetworkProvider>
-          <ThemeProviderWrapper>
+          <ThemeProviderWrapper> {/* Uncomment this line */}
             <UserProvider>
               <SessionProvider>
                 <NotificationsProvider>
@@ -27,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </NotificationsProvider>
               </SessionProvider>
             </UserProvider>
-          </ThemeProviderWrapper>
+          </ThemeProviderWrapper> {/* Uncomment this line */}
         </NetworkProvider>
       </body>
     </html>

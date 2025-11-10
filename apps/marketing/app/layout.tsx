@@ -1,8 +1,9 @@
 import "./output.css"
-import ThemeProviderWrapper from "@/components/ThemeProviderWrapper"
+import ThemeProviderWrapper from "@/components/ThemeProviderWrapper" // Uncomment this line
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import { Inter, Poppins } from 'next/font/google'
+// import { ThemeProvider } from "next-themes" // Import ThemeProvider directly
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-heading' })
@@ -21,11 +22,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body>
-        <ThemeProviderWrapper>
+        <ThemeProviderWrapper> {/* Uncomment this line */}
           <Navbar />
           {children && <main>{children}</main>}
           <Footer />
-        </ThemeProviderWrapper>
+        </ThemeProviderWrapper> {/* Uncomment this line */}
       </body>
     </html>
   )

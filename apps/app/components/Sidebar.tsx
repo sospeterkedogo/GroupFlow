@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Bell, CheckSquare, Plus, X } from 'lucide-react'
+import { Home, Bell, CheckSquare, Plus, X, Menu } from 'lucide-react'
 import clsx from 'clsx'
 import SidebarFooter from './SidebarFooter'
 import { useUser } from '@/app/context/userContext' // Using the context
 import { createClient } from '@/lib/supabase/client'
+import { useSidebar } from '@/app/context/SidebarContext'
 
 interface Project {
   id: string
@@ -16,9 +17,8 @@ interface Project {
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  
+  const {isOpen, setIsOpen}= useSidebar()
   const [projects, setProjects] = useState<Project[]>([])
   const [newProjectTitle, setNewProjectTitle] = useState('')
   const [loading, setLoading] = useState(false) // For modal "create" button
@@ -112,10 +112,11 @@ export default function Sidebar() {
       {/* Hamburger button (mobile) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-primary text-background p-2 rounded-md shadow-md"
+        className="md:hidden fixed top-4 left-4 z-50 bg-background text-background p-2 rounded-md shadow-md"
       >
-        <X className="w-5 h-5" />
+        <Menu className="w-5 h-5" />
       </button>
+
 
       {(isOpen || isModalOpen) && (
         <div
