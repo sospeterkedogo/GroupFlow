@@ -1,6 +1,7 @@
 'use client'
 import { Card, List } from '@/lib/types'
-import { Paperclip, ArrowRight, Trash2, Calendar, Tag } from 'lucide-react'
+import { Paperclip, ArrowRight, Trash2, Calendar, Tag, Plus } from 'lucide-react'
+
 
 interface ModalSidebarProps {
   card: Card
@@ -11,7 +12,8 @@ interface ModalSidebarProps {
     list_id?: string 
   }) => void
   onDeleteCard: () => void
-  onAttachFile: () => void // Stubbed
+  onAttachFile: () => void
+  onAddChecklist: (cardId: string, title: string) => Promise<void>
 }
 
 export default function ModalSidebar({
@@ -19,7 +21,8 @@ export default function ModalSidebar({
   allLists,
   onUpdateCard,
   onDeleteCard,
-  onAttachFile
+  onAttachFile,
+  onAddChecklist
 }: ModalSidebarProps) {
   
   const handleListMove = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -35,6 +38,10 @@ export default function ModalSidebar({
   
   const handlePriorityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onUpdateCard({ priority: e.target.value || null })
+  }
+
+  const handleAddChecklist = async () => {
+    await onAddChecklist(card.id, 'New Checklist')
   }
 
   return (
@@ -93,6 +100,12 @@ export default function ModalSidebar({
             <option value="high">High</option>
           </select>
         </div>
+
+        {/* Add Checklist */}
+        <button className="flex items-center gap-2 w-full bg-border/70 hover:bg-border text-foreground px-3 py-2 rounded-md text-sm" onClick={handleAddChecklist}>
+          <Plus size={16} /> 
+          <span>Add Checklist</span>
+        </button>
 
         {/* Delete Card */}
         <button 

@@ -5,6 +5,7 @@ import {
   X,
   Type,
   CheckSquare,
+  Check,
 } from 'lucide-react'
 import Image from 'next/image'
 import { Tag } from '@/components/board/Card' // Assuming Tag is exported from Card.tsx
@@ -159,7 +160,8 @@ export default function CardModal({
   onDeleteCard,
   onAddComment,
   onUpdateChecklistItem,
-  onDeleteChecklistItem
+  onDeleteChecklistItem,
+  onAddChecklist,
 }: ModalProps) {
   
   if (!card) return null
@@ -204,6 +206,8 @@ export default function CardModal({
   const handleCommentAdd = (cardId: string , content: string) => {
     return onAddComment(card.id, content)
   }
+
+ 
   
   const handleChecklistItemUpdate = (checklistId: string, itemId: string, updates: { text?: string; is_done?: boolean }) => {
     return onUpdateChecklistItem(card.id, checklistId, itemId, updates)
@@ -212,12 +216,20 @@ export default function CardModal({
   const handleChecklistItemDelete = (checklistId: string, itemId: string) => {
     return onDeleteChecklistItem(card.id, checklistId, itemId)
   }
+
+  const handleAddCheckList = async (cardId: string, title: string) => {
+  try {
+      await onAddChecklist(cardId, title);
+    } catch (error) {
+      console.error("Failed to add checklist:", error);
+    }
+}
   
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -323,6 +335,7 @@ export default function CardModal({
                 onUpdateCard={handleSidebarUpdate}
                 onDeleteCard={handleSidebarDelete}
                 onAttachFile={handleSidebarAttach}
+                onAddChecklist={handleAddCheckList}
               />
 
               {/* Modular Activity */}

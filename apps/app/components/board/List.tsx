@@ -5,6 +5,7 @@ import CardComponent from './Card' // Renamed to avoid name collision
 import { MoreHorizontal, Plus, Trash2, Edit } from 'lucide-react'
 import { List, Card } from '@/lib/types' // 1. IMPORT YOUR ACTUAL TYPES
 import { useState } from 'react'
+import { BsPersonAdd } from 'react-icons/bs'
 
 // 2. DEFINE YOUR PROPS INTERFACE. NO MORE 'any'.
 interface ListComponentProps {
@@ -69,6 +70,16 @@ export default function ListComponent({ list, onCardClick, onAddCard, onEdit, on
             className="absolute right-0 top-8 w-48 bg-background border border-border rounded-md shadow-lg z-10"
             onMouseLeave={() => setIsMenuOpen(false)} // Auto-close
             >
+              <button
+                onClick={() => {
+                setIsEditing(true)
+                setIsMenuOpen(false)
+                }}
+                className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted"
+            >
+                <BsPersonAdd className="w-4 h-4" />
+                Assign Members
+            </button>
             <button
                 onClick={() => {
                 setIsEditing(true)
