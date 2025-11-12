@@ -112,7 +112,7 @@ export default function Sidebar() {
       {/* Hamburger button (mobile) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-background text-background p-2 rounded-md shadow-md"
+        className="md:hidden fixed top-4 left-4 z-50 bg-background text-foreground p-2 rounded-md shadow-md"
       >
         <Menu className="w-5 h-5" />
       </button>

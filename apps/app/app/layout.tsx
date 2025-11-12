@@ -1,5 +1,5 @@
 import "./globals.css"
-import ThemeProviderWrapper from "../components/ThemeProviderWrapper" // Uncomment this line
+import ThemeProviderWrapper from "../components/ThemeProviderWrapper" 
 import { UserProvider } from "./context/userContext"
 import { NetworkProvider } from "@/components/NetworkProvider"
 import { Inter, Poppins } from 'next/font/google'

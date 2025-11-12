@@ -3,9 +3,6 @@
 import { LayoutGrid, MoreHorizontal, UserPlus, Edit, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-// 1. THIS IS THE NEW "CONTRACT" FOR THIS COMPONENT.
-// It is no longer "dumb"; it is *informed*.
-// Your page.tsx MUST be updated to provide these props.
 interface AppHeaderProps {
   title: string
   course?: string | null
@@ -14,44 +11,38 @@ interface AppHeaderProps {
   onInvite: () => void
 }
 
-export default function AppHeader({ 
-  title, 
-  course, 
-  onEdit, 
-  onDelete, 
-  onInvite 
+export default function AppHeader({
+  title,
+  course,
+  onEdit,
+  onDelete,
+  onInvite
 }: AppHeaderProps) {
-  // This state is fine because it's purely for
-  // self-contained UI logic (toggling the menu).
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <nav className="bg-background border-b border-border px-4 py-3 md:px-6">
-      <div className="flex justify-between items-center">
-        
-        {/* Left Side: Title and Course */}
-        <div className="flex items-center gap-4">
-          <LayoutGrid className="w-6 h-6 text-primary" />
-          <span className="w-px h-6 bg-border hidden sm:block"></span>
-          {/* 2. ADDED TITLE AND COURSE GROUPING */}
-          <div className="flex flex-col">
-            <h1 className="text-lg font-semibold text-foreground hidden sm:block">
-              {title}
-            </h1>
-            {/* 3. THIS IS THE "COURSE PLACEHOLDER" YOU WANTED. */}
-            {/* It will show the course, or "No Course" if null */}
-            <p className="text-xs text-muted-foreground hidden sm:block">
-              {course || 'No Course'}
-            </p>
+    <nav className="bg-background border-b border-border px-3 sm:px-6 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+
+        {/* LEFT: Menu icon area already exists externally, so we give it space */}
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          {/* Push content right so it doesn’t collide with the menu icon */}
+          <div className="pl-10 sm:pl-0 flex items-center gap-3 min-w-0">
+            <LayoutGrid className="w-6 h-6 text-primary shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
+                {title}
+              </h1>
+              <p className="text-xs text-muted-foreground truncate">
+                {course || 'No Course'}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Actions */}
-        <div className="flex items-center gap-3">
-          {/* (Search & Avatars would go here) */}
-          
-          {/* 4. INVITE BUTTON YOU ASKED FOR */}
-          <button 
+        {/* RIGHT: Buttons */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <button
             onClick={onInvite}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-md shadow-sm hover:bg-primary/80 transition-colors"
           >
@@ -59,20 +50,18 @@ export default function AppHeader({
             <span className="hidden sm:inline">Invite</span>
           </button>
 
-          {/* 5. EDIT/DELETE DROPDOWN (Aesthetic & Safe) */}
           <div className="relative">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 text-muted-foreground rounded-md hover:bg-muted"
+              className="p-1.5 text-muted-foreground rounded-md hover:bg-muted transition"
             >
               <MoreHorizontal className="w-5 h-5" />
             </button>
 
-            {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-md shadow-lg z-10"
-                onMouseLeave={() => setIsMenuOpen(false)} // Auto-close
+              <div
+                className="absolute right-0 top-full mt-2 w-40 sm:w-48 bg-background border border-border rounded-md shadow-lg z-20"
+                onMouseLeave={() => setIsMenuOpen(false)}
               >
                 <button
                   onClick={() => {
@@ -97,10 +86,8 @@ export default function AppHeader({
               </div>
             )}
           </div>
-
         </div>
       </div>
     </nav>
   )
 }
-
