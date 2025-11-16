@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-// --- NEW @supabase/ssr server clients ---
-import { createClient } from '@/lib/supabase/server';
+
+import { 
+  createSupabaseRouteHandlerClient, 
+  createSupabaseAdminClient 
+} from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
     // 1. --- AUTHENTICATE INVITEE (via NEW @supabase/ssr) ---
-    const supabase = await createClient();
+    // This client is for getting the USER
+    const supabase = createSupabaseRouteHandlerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -20,8 +24,9 @@ export async function POST(req: Request) {
     }
 
     // 2. --- CALL THE SUPABASE FUNCTION ---
-    // We STILL use an admin client for the 'security definer' RPC
-    const supabaseAdmin = await createClient();
+    // This client is for calling the ADMIN RPC
+    // It uses the SERVICE_ROLE_KEY
+    const supabaseAdmin = createSupabaseAdminClient();
     const { data, error } = await supabaseAdmin.rpc('accept_invitation', {
       invite_token: token,
       authed_user_id: userId,

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server-route-handler'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const VALID_PROJECT_ROLES = ['owner', 'admin', 'member', 'viewer']
@@ -8,7 +8,7 @@ export async function POST(
   context: { params: { projectId: string } }
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = createSupabaseRouteHandlerClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
