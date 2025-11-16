@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/serviceClient'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
-  const supabase = await createServiceClient()
+  const supabase = createSupabaseRouteHandlerClient()
   const data = await req.json()
 
   const { error } = await supabase.from('notifications').insert([data])

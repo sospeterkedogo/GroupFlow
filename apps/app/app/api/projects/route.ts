@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 // This path alias is failing in your environment.
 // Make sure this path is correct.
-import { createClient } from '@/lib/supabase/server'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
+  const supabase = createSupabaseRouteHandlerClient()
 
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const supabase = await createClient()
+  const supabase = createSupabaseRouteHandlerClient()
 
   try {
     const { data: { user } } = await supabase.auth.getUser()

@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // POST /api/comments
 // Creates a new comment (a 'card_activity' row)
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
+  const supabase = createSupabaseRouteHandlerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
