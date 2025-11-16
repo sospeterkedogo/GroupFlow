@@ -1,23 +1,23 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/serviceClient'
+import { createSupabaseServerComponentClient } from '@/lib/supabase/server'
 
 // Update profile
 export async function updateProfile(userId: string, profile: { firstname: string; lastname: string; username: string; avatar_url: string }) {
-  const supabase = createServiceClient()
+  const supabase = createSupabaseServerComponentClient()
   const { error } = await supabase.from('profiles').update(profile).eq('id', userId)
   if (error) throw new Error(error.message)
 }
 
 // Update password
 export async function updatePassword(userId: string, newPassword: string) {
-  const supabase = createServiceClient()
+  const supabase = createSupabaseServerComponentClient()
   const { error } = await supabase.auth.admin.updateUserById(userId, { password: newPassword })
   if (error) throw new Error(error.message)
 }
 // Delete account
 export async function deleteAccount(userId: string) {
-  const supabase = createServiceClient()
+  const supabase = createSupabaseServerComponentClient()
 
   // 1️⃣ Delete profile first (optional but cleaner)
   const { error: profileError } = await supabase
