@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { 
-  createSupabaseRouteHandlerClient, 
-  createSupabaseAdminClient 
-} from '@/lib/supabase/server';
+import { createSupabaseRouteHandlerClient,  } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/adminClient';
 
 export async function POST(req: Request) {
   try {
