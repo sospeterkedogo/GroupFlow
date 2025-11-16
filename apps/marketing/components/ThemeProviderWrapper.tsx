@@ -23,7 +23,7 @@ export default function ThemeProviderWrapper({ children, ...props }: CustomTheme
 
   return (
     <ThemeProvider
-      attribute="class"
+      attribute={"class" as any}
       defaultTheme="system"
       enableSystem
       value={{

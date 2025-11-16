@@ -5,7 +5,7 @@ import { NetworkProvider } from "@/components/NetworkProvider"
 import { Inter, Poppins } from 'next/font/google'
 import { SessionProvider } from "../app/context/SessionContext"
 import { NotificationsProvider } from "./context/notificationsContext"
-// import { ThemeProvider } from "next-themes" // Import ThemeProvider directly
+
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-heading' })

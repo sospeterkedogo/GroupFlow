@@ -33,7 +33,7 @@ export default function InviteModal({ projectId, onClose }: InviteModalProps) {
       const response = await fetch(`/api/projects/${projectId}/invites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ email, role, projectId }),
       });
 
       if (!response.ok) {

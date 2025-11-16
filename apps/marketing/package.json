@@ -12,10 +12,12 @@
     "test": "jest"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "@repo/ui": "file:../../packages/ui",
     "@tailwindcss/postcss": "^4.1.16",
     "autoprefixer": "^10.4.21",
-    "framer-motion": "^12.23.24",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.378.0",
     "next": "14.2.3",
     "postcss": "^8.5.6",
     "react": "^18.2.0",
@@ -23,8 +25,8 @@
     "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
+    "@repo/eslint-config": "file:../../packages/eslint-config",
+    "@repo/typescript-config": "file:../../packages/typescript-config",
     "@types/node": "^22.15.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

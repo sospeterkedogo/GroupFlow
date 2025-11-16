@@ -2,7 +2,7 @@
   "name": "group-flow",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm --dir apps/app run build && pnpm --dir apps/marketing run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -10,7 +10,6 @@
     "test": "turbo run test"
   },
   "devDependencies": {
-    "tailwindcss": "^4.1.17",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^30.0.0",
@@ -26,15 +25,17 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@11.6.2",
+
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "dependencies": {
     "@babel/runtime": "^7.28.4",
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.78.0",
+    "@supabase/supabase-js": "^2.81.1",
     "body-parser": "^2.2.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",

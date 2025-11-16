@@ -18,8 +18,8 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const { projectId } = context.params
-    const { email, role } = await req.json()
+    //const { projectId } = context.params
+    const { email, role, projectId } = await req.json()
 
     // --- VALIDATION ---
     if (!email || !role) {
@@ -110,7 +110,7 @@ export async function POST(
 
     // send invite email (background task supabase edge function)
     const sendEmailPromise = fetch(
-  `${process.env.SUPABASE_URL}/functions/v1/send-email-invite`,
+  `https://hwjnoogfdyjjijuazzse.supabase.co/functions/v1/send-email-invite`,
   {
     method: 'POST',
     headers: {
