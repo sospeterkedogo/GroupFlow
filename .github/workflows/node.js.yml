@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: {}    # allow manual runs from the GitHub UI / gh
 
 jobs:
   build:
@@ -12,7 +13,6 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 22.x]
-
     steps:
       - uses: actions/checkout@v4
 
@@ -22,10 +22,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+      - name: Enable Corepack and activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@8 --activate
+
+      - name: Verify pnpm
+        run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
