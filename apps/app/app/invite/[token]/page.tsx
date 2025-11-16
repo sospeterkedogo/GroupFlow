@@ -68,9 +68,9 @@ export default function AcceptInvitePage() {
 
           // SUCCESS!
           setStatus('success');
-          if (data.resourceType === 'project') router.push(`/project/${data.resourceId}`);
+          if (data.resourceType === 'project') router.push(`/projects/${data.resourceId}`);
           else if (data.resourceType === 'board') router.push(`/board/${data.resourceId}`);
-          else router.push('/dashboard');
+          else router.push('/');
 
         } catch (err: any) {
           setStatus('error');
