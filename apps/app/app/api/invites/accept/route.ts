@@ -11,14 +11,14 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const userId = user.id;
 
     // --- FROM HERE, THE LOGIC IS THE SAME ---
     const { token } = await req.json();
     if (!token) {
-      return new NextResponse('Token is required', { status: 400 });
+      return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
     // 2. --- CALL THE SUPABASE FUNCTION ---
@@ -33,13 +33,13 @@ export async function POST(req: Request) {
     // 3. --- HANDLE RESPONSE FROM FUNCTION ---
     if (error) {
       console.error('[SUPABASE_RPC_ERROR]', error);
-      return new NextResponse('Internal Error calling RPC', { status: 500 });
+      return NextResponse.json({ error: 'Internal Error calling RPC' }, { status: 500 });
     }
 
     if (data.error) {
-      if (data.error.includes('already a member')) return new NextResponse(data.error, { status: 409 });
-      if (data.error.includes('different email')) return new NextResponse(data.error, { status: 403 });
-      return new NextResponse(data.error, { status: 400 });
+      if (data.error.includes('already a member')) return NextResponse.json({ error: data.error }, { status: 409 });
+      if (data.error.includes('different email')) return NextResponse.json({ error: data.error }, { status: 403 });
+      return NextResponse.json({ error: data.error }, { status: 400 });
     }
 
     // 4. --- RETURN SUCCESS ---
@@ -47,6 +47,6 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('[INVITE_ACCEPT_POST]', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

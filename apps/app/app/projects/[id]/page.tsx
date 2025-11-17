@@ -47,17 +47,17 @@ export default function ProjectBoardPage() {
 
   const [listToDelete, setListToDelete] = useState<List | null>(null)
 
- const projectId = params.id as string 
+ const id = params.id as string 
  type Priority = 'low' | 'medium' | 'high';
 
  // --- (useEffect for fetching the board) ---
  useEffect(() => {
-   if (authLoading || !user || !projectId) return
+   if (authLoading || !user || !id) return
     const fetchBoard = async () => {
      setLoading(true)
      setError(null)
      try {
-        const res = await fetch(`/api/projects/${projectId}`) 
+        const res = await fetch(`/api/projects/${id}`) 
         if (!res.ok) {
           const err = await res.json()
           if (res.status === 401 || res.status === 404) {
@@ -82,14 +82,14 @@ export default function ProjectBoardPage() {
       }
     }
     fetchBoard()
- }, [projectId, user, authLoading, router])
+ }, [id, user, authLoading, router])
 
  // --- ALL HANDLER FUNCTIONS ---
 
    // Edit Project Modal Logic
   const handleOpenEditModal = () => setIsEditModalOpen(true)
   const closeEditModal = () => setIsEditModalOpen(false)
-  const handleSaveEdit = async (updatedData: { name: string, course: string | undefined }) => {
+  const handleSaveEdit = async (updatedData: { name: string, course: string | undefined, due_date: string | undefined }) => {
     if (!board) return
     
     const oldBoard = board
@@ -891,7 +891,7 @@ if (loading || authLoading) { return ( <DashboardLayout><div className="flex-1 f
       {/* Invite Modal (from your Canvas) */}
       {isInviteModalOpen && (
         <InviteModal
-          projectId={board.id}
+          id={board.id}
           onClose={closeInviteModal}
         />
       )}

@@ -5,21 +5,18 @@ const VALID_PROJECT_ROLES = ['owner', 'admin', 'member', 'viewer']
 
 export async function POST(
   req: Request,
-  context: { params: { projectId: string } }
+  context: { params: { id: string } } // You aren't using this in your snippet, but keeping type signature
 ) {
   try {
     const supabase = createSupabaseRouteHandlerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id
 
     if (!userId) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    //const { projectId } = context.params
-    const { email, role, projectId } = await req.json()
+    const { email, role, id } = await req.json()
 
     // --- VALIDATION ---
     if (!email || !role) {
@@ -30,59 +27,58 @@ export async function POST(
       return new NextResponse(`Invalid role: ${role}`, { status: 400 })
     }
 
-    // --- AUTHORIZATION ---
-    const { data: collaborator, error: collaboratorError } = await supabase
-      .from('project_collaborators')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('project_id', projectId)
-      .single()
+    // --- AUTHORIZATION (DELETED) ---
+    // We removed the manual query to 'project_collaborators'. 
+    // The RLS policy "Admins can create invites" now handles this check 
+    // during the INSERT operation below.
 
-    if (collaboratorError && collaboratorError.code !== 'PGRST116') {
-      console.error('Error fetching collaborator:', collaboratorError)
-      return new NextResponse('Internal error', { status: 500 })
-    }
-
-    if (!collaborator || !['owner', 'admin'].includes(collaborator.role)) {
-      return new NextResponse('Forbidden', { status: 403 })
-    }
-
-    // --- EXISTING COLLABORATOR CHECK ---
+    // --- LOGIC: EXISTING CHECKS ---
+    // We keep these for better UI error messages (409 Conflict),
+    // though you could enforce this via SQL Unique Constraints too.
+    
+    // 1. Is user already in the project?
     const { data: existingCollaborator } = await supabase
       .from('project_collaborators')
       .select('id')
-      .eq('project_id', projectId)
-      .eq('email', email)
+      .eq('project_id', id)
+      // 1. Select the ID, AND join profiles with !inner to force filtering
+      .select('id, profiles!inner(email)') 
+      .eq('project_id', id)
+      // 2. Filter against the joined table column
+      .eq('profiles.email', email)
       .maybeSingle()
 
     if (existingCollaborator) {
-      return new NextResponse('User is already a member of this project', {
-        status: 409,
-      })
+      return new NextResponse('User is already a member of this project', { status: 409 })
     }
 
-    // --- EXISTING INVITE CHECK ---
+    // 2. Is there already a pending invite?
     const { data: existingInvite } = await supabase
       .from('invitations')
-      .select('*')
+      .select('id')
       .eq('email', email)
       .eq('resource_type', 'project')
-      .eq('resource_id', projectId)
+      .eq('resource_id', id)
       .eq('status', 'pending')
       .maybeSingle()
 
     if (existingInvite) {
-      return new NextResponse('An invite has already been sent to this email', {
-        status: 409,
-      })
+      return new NextResponse('An invite has already been sent to this email', { status: 409 })
     }
 
-    const { data: project } = await supabase
-    .from('projects')
-    .select('name')
-    .eq('id', projectId)
-    .single();
+    // --- FETCH PROJECT NAME (For Email) ---
+    // We fetch this using the CLIENT credentials. 
+    // If the RLS works, this SELECT will verify the user has access to read the project.
+    const { data: project, error: projError } = await supabase
+      .from('projects')
+      .select('name')
+      .eq('id', id)
+      .single();
 
+    if (projError || !project) {
+       // If RLS blocks reading the project, they definitely can't invite to it.
+       return new NextResponse('Project not found or Forbidden', { status: 403 })
+    }
 
     // --- CREATE INVITE ---
     const token = crypto.randomUUID()
@@ -93,7 +89,7 @@ export async function POST(
         {
           email,
           resource_type: 'project',
-          resource_id: projectId,
+          resource_id: id,
           role,
           status: 'pending',
           invited_by_user_id: userId,
@@ -105,29 +101,34 @@ export async function POST(
 
     if (inviteError) {
       console.error('Error creating invite:', inviteError.message)
+      
+      // CATCH RLS ERROR
+      // Postgres error code 42501 means "Insufficient Privilege" (RLS Denied)
+      if (inviteError.code === '42501') {
+        return new NextResponse('You do not have permission to invite members to this project.', { status: 403 })
+      }
+
       return new NextResponse('Error creating invite', { status: 500 })
     }
 
-    // send invite email (background task supabase edge function)
+    // --- SEND EMAIL ---
     const sendEmailPromise = fetch(
-  `https://hwjnoogfdyjjijuazzse.supabase.co/functions/v1/send-email-invite`,
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-    },
-    body: JSON.stringify({
-      email,
-      token,
-      projectName: project?.name ?? 'Your Project',
-    }),
-  }
+      `https://hwjnoogfdyjjijuazzse.supabase.co/functions/v1/send-email-invite`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          email,
+          token,
+          projectName: project.name ?? 'Your Project',
+        }),
+      }
     ).catch((err) => console.error('Background email error:', err));
 
-    void sendEmailPromise; // clarity that it’s intentional
-
-
+    void sendEmailPromise;
 
     return NextResponse.json(newInvite, { status: 201 })
   } catch (error) {

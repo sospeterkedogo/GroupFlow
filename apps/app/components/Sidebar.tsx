@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Bell, CheckSquare, Plus, X, Menu } from 'lucide-react'
 import clsx from 'clsx'
 import SidebarFooter from './SidebarFooter'
-import { useUser } from '@/app/context/userContext' // Using the context
+import { useSession } from '@/app/context/SessionContext' // Using the context
 import { createClient } from '@/lib/supabase/client'
 import { useSidebar } from '@/app/context/SidebarContext'
 
@@ -19,50 +19,17 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const {isOpen, setIsOpen}= useSidebar()
-  const [projects, setProjects] = useState<Project[]>([])
   const [newProjectTitle, setNewProjectTitle] = useState('')
+  const [newProjectCourse, setNewProjectCourse] = useState('')
+  const [newProjectDueDate, setNewProjectDueDate] = useState('')
   const [loading, setLoading] = useState(false) // For modal "create" button
   const [error, setError] = useState<string | null>(null) 
-  const [isProjectsLoading, setIsProjectsLoading] = useState(true)
   
   // 1. GET THE USER AND AUTH STATE *FROM THE CONTEXT*
-  const { user, loading: isAuthLoading } = useUser() 
+  const { user, loading: isAuthLoading, projects, projectsLoading, addProject } = useSession() 
   const supabase = createClient()
 
-  // 2. THIS EFFECT *REACTS* TO THE USER STATE.
-  // When 'user' changes from null -> user, this re-runs.
-  useEffect(() => {
-    const fetchProjects = async () => {
-      // 3. If the context says there's no user, set projects to empty.
-      if (!user) {
-        setProjects([])
-        setIsProjectsLoading(false)
-        return
-      }
-
-      // 4. If we have a user, THEN fetch their projects.
-      setIsProjectsLoading(true)
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('created_by_user_id', user.id) // Use the user.id from context
-
-      if (error) {
-        console.error('Failed to fetch projects:', error)
-        setError('Failed to load projects')
-        setProjects([])
-      } else {
-        setProjects(data || [])
-      }
-      setIsProjectsLoading(false)
-    }
-    
-    // 5. Don't run this fetch until the main auth is even done.
-    if (!isAuthLoading) {
-      fetchProjects()
-    }
-
-  }, [user, isAuthLoading, supabase]) // Dependencies are key!
+  
   
   const handleOpenModal = () => {
     setError(null) 
@@ -75,37 +42,29 @@ export default function Sidebar() {
     setError(null)
   }
 
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newProjectTitle.trim()) return
-    setLoading(true)
-    setError(null) 
-    try {
-     const res = await fetch('/api/projects', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ title: newProjectTitle.trim() }),
-     }) 
-     if (!res.ok) {
-       const errData = await res.json()
-       throw new Error(errData.error || 'Failed to create project')
-     }  
-     // --- THIS IS THE FIX... AGAIN ---
-     // Your API route returns the project *directly*,
-     // not wrapped in a { project: ... } object.
-     const newProject: Project = await res.json()
-     
-     setProjects([...projects, newProject])
+ const handleCreateProject = async (e: React.FormEvent) => {
+   e.preventDefault()
+   if (!newProjectTitle.trim()) return
+   setLoading(true)
+   setError(null) 
+   try {
+     // 3. Call the addProject function *from the context*
+     // We pass 'null' for the fields the modal doesn't ask for.
+     await addProject({
+       title: newProjectTitle.trim(),
+       course: newProjectCourse.trim(),
+       due_date: newProjectDueDate.trim()
+     })
      handleCloseModal()
-    } 
-    catch (err) {
-       console.error(err)
-       const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
-       setError(errorMessage)
-    } finally {
-       setLoading(false)
-    }
+   } 
+   catch (err) {
+    console.error(err)
+    const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+    setError(errorMessage)
+   } finally {
+      setLoading(false)
    }
+  }
 
   return (
     <>
@@ -188,7 +147,7 @@ export default function Sidebar() {
               {/* This now correctly waits for auth, THEN shows a loading state, 
                 THEN shows the projects.
               */}
-              {isAuthLoading || isProjectsLoading ? (
+              {isAuthLoading || projectsLoading ? (
                   <p className="px-3 py-2 text-sm text-muted">Loading projects...</p>
               ) : error ? (
                   <p className="px-3 py-2 text-sm text-red-500">{error}</p>
@@ -246,6 +205,22 @@ export default function Sidebar() {
                 className="border border-border rounded-md px-3 py-2"
                 value={newProjectTitle}
                 onChange={(e) => setNewProjectTitle(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Course"
+                className="border border-border rounded-md px-3 py-2"
+                value={newProjectCourse}
+                onChange={(e) => setNewProjectCourse(e.target.value)}
+                required
+              />
+              <input
+                type="date"
+                placeholder="Due Date"
+                className="border border-border rounded-md px-3 py-2"
+                value={newProjectDueDate}
+                onChange={(e) => setNewProjectDueDate(e.target.value)}
                 required
               />
               

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 interface InviteModalProps {
-  projectId: string
+  id: string
   onClose: () => void
 }
 
@@ -14,7 +14,7 @@ const ROLES = [
   { value: 'viewer', label: 'Viewer' },
 ]
 
-export default function InviteModal({ projectId, onClose }: InviteModalProps) {
+export default function InviteModal({ id, onClose }: InviteModalProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('viewer'); // Default to least-privileged
   const [isLoading, setIsLoading] = useState(false);
@@ -30,10 +30,10 @@ export default function InviteModal({ projectId, onClose }: InviteModalProps) {
     setSuccess(false);
 
     try {
-      const response = await fetch(`/api/projects/${projectId}/invites`, {
+      const response = await fetch(`/api/projects/${id}/invites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role, projectId }),
+        body: JSON.stringify({ email, role, id }),
       });
 
       if (!response.ok) {

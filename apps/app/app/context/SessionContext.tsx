@@ -97,7 +97,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.warn("Failed to save profile to localStorage:", error);
     }
-  }, [])
+  }, [supabase])
 
   // 6. "OFFLINE-AWARE" FETCHPROJECTS
   const fetchProjects = useCallback(async () => {
@@ -129,7 +129,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } finally {
       // We will set this in the main effect
     }
-  }, [isInitialLoad, supabase]) // Empty dep array, will be called by main effect
+  }, [isInitialLoad])
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -207,7 +207,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [supabase, checkUserOnNavigate])
 
   
-  // --- (addProject function is fine) ---
   const addProject = useCallback(async (newProject: {
     title: string
     course: string | null
@@ -223,19 +222,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const errData = await res.json()
       throw new Error(errData.error || 'Failed to create project')
     }
+
+    const projectData: Project = await res.json()
     
-    const projectFromApi: Project = await res.json()
-    
-    const updatedProjects = [...projects, projectFromApi]
-    setProjects(updatedProjects)
-    try {
-      localStorage.setItem(PROJECTS_CACHE_KEY, JSON.stringify(updatedProjects))
-    } catch (error) {
-      console.warn("Failed to save updated projects to localStorage:", error);
-    }
-    
-    return projectFromApi
-  }, [projects, setProjects])
+    return projectData
+  }, [fetchProjects])
 
   const value: SessionContextType = {
     user,

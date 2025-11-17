@@ -13,19 +13,6 @@ export async function POST(req: NextRequest) {
   if (!list_id || !project_id || !title) {
     return NextResponse.json({ error: 'list_id, project_id, and title are required' }, { status: 400 })
   }
-
-  // RLS check: Is user a member of this project?
-  const { data: collaborator, error: collabError } = await supabase
-    .from('project_collaborators')
-    .select('role')
-    .eq('project_id', project_id)
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (collabError || !collaborator) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
   // Get the highest current position in this *list*
   const { data: maxPos, error: posError } = await supabase
     .from('cards')
