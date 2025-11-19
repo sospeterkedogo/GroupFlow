@@ -58,3 +58,5 @@ export interface Project {
   due_date?: string;
   lists: List[];
 }
+
+export type Priority = 'low' | 'medium' | 'high';

@@ -3,7 +3,6 @@
 import { useSession } from '@/app/context/SessionContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { Menu } from 'lucide-react'
 import { FiFilter } from 'react-icons/fi'
 import { BiSortAlt2 } from 'react-icons/bi'
 import DashboardLayout from '@/components/layouts/DashboardLayout'

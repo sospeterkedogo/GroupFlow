@@ -15,7 +15,6 @@ export default function Navbar() {
   const navItems = [
     { name: "Docs", href: "/docs" },
     { name: "Features", href: "/features" },
-    { name: "Pricing", href: "/pricing" },
     { name: "About", href: "/about" },
   ]
 
@@ -50,12 +49,12 @@ export default function Navbar() {
         {/* Right side: Theme + Auth */}
         <div className="hidden md:flex items-center space-x-4">
           <ThemeToggle />
-          <Link href="http://localhost:3001/auth/login">
+          <Link href="https://groupflowapp.devpete.co.uk/auth/login">
             <Button variant="ghost" className="text-sm font-medium">
               Log in
             </Button>
           </Link>
-          <Link href="http://localhost:3001/auth/signup">
+          <Link href="https://groupflowapp.devpete.co.uk/auth/signup">
             <Button className="text-sm font-medium">
               Sign up
             </Button>
