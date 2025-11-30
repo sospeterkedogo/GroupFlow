@@ -1,629 +1,514 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from '@/app/context/SessionContext';
-import { Project, List, Card, Activity, Checklist, ChecklistItem, Priority } from '@/lib/types';
+import { useSession } from '@/app/context/SessionContext'; 
+import { Project, Card, List, Priority, Checklist, ChecklistItem, Activity } from '@/lib/types';
 import { DropResult } from '@hello-pangea/dnd';
+import { useStorage, useMutation } from "@/liveblocks.config";
+import { LiveObject, LiveList } from "@liveblocks/client";
 
-// --- CORE IMMUTABILITY HELPER ---
-/**
- * Finds and updates a card within the board state immutably.
- * This is the crucial, complex state logic, centralized here.
- */
-const updateCardInBoardState = (
-    currentBoard: Project,
-    cardId: string, 
-    updateFn: (card: Card) => Card 
-): Project => {
-    const newBoard = JSON.parse(JSON.stringify(currentBoard)) as Project;
-    for (const list of newBoard.lists) {
-        const cardIndex = list.cards.findIndex(c => c.id === cardId);
-        if (cardIndex !== -1) {
-            const oldCard = list.cards[cardIndex];
-            // Execute the update function on a deep copy of the card
-            if (!oldCard) return currentBoard;
-            list.cards[cardIndex] = updateFn(oldCard);
-            return newBoard; // Found and updated, return new state
-        }
-    }
-    return currentBoard; // No change
+// --- HELPER: Strict Null to Undefined Conversion ---
+const toUndefined = <T>(val: T | null | undefined): T | undefined => {
+    return (val === null || val === undefined) ? undefined : val;
 };
 
-// --- DND POSITION HELPER (Moved from Component to Hook) ---
+// --- DND HELPER ---
 function getNewPosition(items: { position: number }[], index: number): number {
     if (!items || items.length === 0) return 1.0;
     
     if (index === 0) {
-        const firstItem = items[0];
-        return firstItem ? firstItem.position / 2.0 : 1.0;
+        const first = items[0];
+        return (first?.position ?? 1.0) / 2.0;
     }
-
+    
     if (index === items.length) {
-        const lastItem = items[items.length - 1];
-        return lastItem ? lastItem.position + 1.0 : items.length + 1.0;
+        const last = items[items.length - 1];
+        return (last?.position ?? 0) + 1.0;
     }
 
-    const prevItem = items[index - 1];
-    const nextItem = items[index];
-
-    if (prevItem && nextItem) {
-        return (prevItem.position + nextItem.position) / 2.0;
-    }
-    return items.length + 1.0;
+    const prev = items[index - 1];
+    const next = items[index];
+    
+    if (!prev || !next) return 1.0; 
+    return (prev.position + next.position) / 2.0;
 }
 
-
-export const useBoardData = (id: string | undefined) => {
+export const useBoardData = (id: string) => {
     const router = useRouter();
-    const { user, loading: authLoading } = useSession(); 
+    const { user } = useSession(); 
 
-    // --- Primary State ---
-    const [board, setBoard] = useState<Project | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // --- 1. READ STATE ---
+    const projectMeta = useStorage((root) => root.projectMeta);
+    const liveLists = useStorage((root) => root.lists);
+
+    const board: Project | null = projectMeta && liveLists ? {
+        id: projectMeta.id,
+        name: projectMeta.name,
+        course: toUndefined(projectMeta.course),
+        due_date: toUndefined(projectMeta.due_date),
+       
+        lists: liveLists.map(l => ({
+            id: l.id,
+            title: l.title,
+            position: l.position,
+            cards: l.cards.map(c => ({
+                id: c.id,
+                title: c.title,
+                description: toUndefined(c.description),
+                priority: (c.priority as Priority) || 'Medium',
+                due_date: toUndefined(c.due_date),
+                position: c.position,
+                list_id: c.list_id,
+                activity: c.activity ? c.activity.map(a => ({
+                    id: a.id,
+                    user_id: a.user_id,
+                    type: a.type as "comment" | "action", 
+                    content: a.content,
+                    created_at: a.created_at,
+                    user_username: a.user_username || "", 
+                    user_avatar_url: a.user_avatar_url || ""
+                })) : [], 
+                checklists: c.checklists ? c.checklists.map(cl => ({
+                    id: cl.id,
+                    title: cl.title,
+                    position: cl.position,
+                    items: cl.items ? cl.items.map(i => ({ 
+                        id: i.id,
+                        text: i.text,
+                        is_done: i.is_done,
+                        position: i.position
+                    })) : []
+                })) : [],
+                assignees: [] 
+            }))
+        })) 
+    } : null;
+
+    // --- 2. LOCAL UI STATE ---
     const [selectedCard, setSelectedCard] = useState<Card | null>(null);
     const [currentListTitle, setCurrentListTitle] = useState<string>('');
+    const [error, setError] = useState<string | null>(null);
 
-    // --- Modal/Contextual State Functions ---
+    const activeCard = board?.lists
+        .flatMap(l => l.cards)
+        .find(c => c.id === selectedCard?.id);
+
+    if (selectedCard && !activeCard && board) {
+        setTimeout(() => setSelectedCard(null), 0);
+    }
+
     const handleCardClick = useCallback((card: Card, listTitle: string) => {
         setSelectedCard(card);
         setCurrentListTitle(listTitle);
     }, []);
+    
     const closeCardModal = useCallback(() => setSelectedCard(null), []);
 
-    // --- Data Fetching Effect ---
-    const fetchBoard = useCallback(async () => {
-        if (!user || !id) return;
-        setLoading(true);
-        setError(null);
+    // =================================================================
+    // MUTATIONS
+    // =================================================================
+
+    const handleProjectUpdate = useMutation(async ({ storage }, updatedData: any) => {
+        const meta = storage.get("projectMeta");
+        meta.update(updatedData);
+        await fetch(`/api/projects/${id}`, {
+             method: 'PATCH',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify(updatedData),
+        }).catch(e => setError("Failed to save project"));
+    }, [id]);
+
+    const handleDeleteProject = useCallback(async () => {
         try {
-            const res = await fetch(`/api/projects/${id}`); 
-            if (!res.ok) {
-                const err = await res.json();
-                if (res.status === 401 || res.status === 404) {
-                    setError(err.error || 'Board not found or unauthorized');
-                    setTimeout(() => router.push('/dashboard'), 2000);
-                }
-                throw new Error(err.error || 'Failed to fetch board');
-            }
-            const data: Project = await res.json();
-            // Sorting/initialization logic (Important for DND position logic)
-            data.lists = data.lists || [];
-            data.lists.forEach((list: List) => {
-                list.cards = list.cards || [];
-                list.cards.sort((a, b) => a.position - b.position);
-            });
-            data.lists.sort((a, b) => a.position - b.position);
-            setBoard(data);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
+            const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed');
+            router.push('/');
+        } catch (e) {
+            setError('Failed to delete project.');
         }
-    }, [id, user, router]);
+    }, [id, router]);
 
-    useEffect(() => {
-        if (authLoading || !id) return;
-        fetchBoard();
-    }, [id, authLoading, fetchBoard]);
-
-    // --- Card Update Helper (Handles optimistic updates and selected card sync) ---
-    // This helper is used internally by handlers for simple updates (like title, description)
-    const updateCardOptimistic = useCallback((cardId: string, updates: Partial<Card>) => {
-        if (!board) return;
-        setBoard(currentBoard => {
-            if (!currentBoard) return null;
-            const newBoard = updateCardInBoardState(currentBoard, cardId, (card) => {
-                return { ...card, ...updates };
-            });
-            // Sync the selected card in the modal
-            setSelectedCard(prevCard => 
-                prevCard && prevCard.id === cardId ? { ...prevCard, ...updates } as Card : prevCard
-            );
-            return newBoard;
+    const handleCreateList = useMutation(async ({ storage }, title: string) => {
+        const res = await fetch('/api/lists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: id, title })
         });
-    }, [board]);
+        if (!res.ok) throw new Error("Failed to create list");
+        const newList: List = await res.json();
 
-    // =================================================================
-    // DND HANDLERS (New centralized logic)
-    // =================================================================
+        const lists = storage.get("lists");
+        lists.push(new LiveObject({
+            id: newList.id,
+            title: newList.title,
+            position: newList.position,
+            cards: new LiveList([])
+        }));
+    }, [id]);
 
-    const handleMoveListOrCard = useCallback(async (listId: string, cardId: string | null, updates: { position: number, list_id?: string }) => {
-        const idToUpdate = cardId || listId;
-        const endpoint = cardId ? `/api/cards/${idToUpdate}` : `/api/lists/${idToUpdate}`;
-
-        try {
-            const res = await fetch(endpoint, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
-            if (!res.ok) throw new Error('Failed to update position');
-        } catch (err) {
-            setError("Failed to save drag and drop changes. Please refresh.");
-            // NOTE: In a real rollback scenario, you would need to force a refetch or manually revert DND state here.
+    const handleEditList = useMutation(async ({ storage }, listId: string, newTitle: string) => {
+        const lists = storage.get("lists");
+        for (const l of lists) {
+            if (l.get("id") === listId) {
+                l.set("title", newTitle);
+                await fetch(`/api/lists/${listId}`, { 
+                    method: 'PATCH', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ title: newTitle }) 
+                });
+                return;
+            }
         }
     }, []);
 
-    const handleDragEndWrapper = useCallback((result: DropResult) => {
-        const { source, destination, type, draggableId } = result;
-        if (!destination || !board) return;
-        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-        
-        const oldBoard = JSON.parse(JSON.stringify(board)) as Project;
-        let apiCall: Promise<void> | null = null;
-
-        // Functional update to handle optimistic state change
-        setBoard(currentBoard => {
-            if (!currentBoard) return null;
-            const newBoard = JSON.parse(JSON.stringify(currentBoard)) as Project;
-            
-            if (type === 'list') {
-                const [movedList] = newBoard.lists.splice(source.index, 1);
-                if (!movedList) return currentBoard;
-
-                const newPosition = getNewPosition(newBoard.lists, destination.index);
-                movedList.position = newPosition; 
-                newBoard.lists.splice(destination.index, 0, movedList);
-                
-                // Prepare API call
-                apiCall = handleMoveListOrCard(draggableId, null, { position: newPosition });
-            }
-
-            if (type === 'card') {
-                const sourceList = newBoard.lists.find(l => l.id === source.droppableId);
-                const destList = newBoard.lists.find(l => l.id === destination.droppableId);
-                if (!sourceList || !destList) return currentBoard;
-
-                const [movedCard] = sourceList.cards.splice(source.index, 1);
-                if (!movedCard) return currentBoard;
-
-                let newPosition: number;
-                let listIdUpdate: string | undefined = undefined;
-
-                if (source.droppableId === destination.droppableId) {
-                    newPosition = getNewPosition(sourceList.cards, destination.index);
-                    sourceList.cards.splice(destination.index, 0, movedCard);
-                } else {
-                    newPosition = getNewPosition(destList.cards, destination.index);
-                    listIdUpdate = destList.id;
-                    destList.cards.splice(destination.index, 0, movedCard);
-                }
-                
-                movedCard.position = newPosition; 
-                if (listIdUpdate) movedCard.list_id = listIdUpdate;
-                
-                // Prepare API call
-                apiCall = handleMoveListOrCard(movedCard.list_id, draggableId, { 
-                    position: newPosition, 
-                    list_id: listIdUpdate 
-                });
-            }
-            
-            // Execute API call (fire and forget, errors handled by handleMoveListOrCard)
-            if (apiCall) apiCall.catch(() => setBoard(oldBoard)); // Simple rollback on error
-            return newBoard;
-        });
-    }, [board, handleMoveListOrCard]);
-
-
-
-
-    // =================================================================
-    // PROJECT & LIST CRUD HANDLERS (Unchanged from previous revision)
-    // =================================================================
-
-    const handleProjectUpdate = useCallback(async (updatedData: { name: string, course: string | undefined, due_date: string | undefined }) => {
-        if (!board) return;
-        const oldBoard = board;
-        setBoard({ ...board, ...updatedData }); // Optimistic Update
-        try {
-            const res = await fetch(`/api/projects/${board.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            });
-            if (!res.ok) throw new Error('Failed to save project changes');
-        } catch (e) {
-            setError('Failed to save project changes. Reverting.');
-            setBoard(oldBoard); // Rollback
-            throw e;
+    const handleConfirmDeleteList = useMutation(async ({ storage }, listToDelete: List) => {
+        const lists = storage.get("lists");
+        const index = lists.findIndex((l) => l.get("id") === listToDelete.id);
+        if (index !== -1) {
+            lists.delete(index);
+            await fetch(`/api/lists/${listToDelete.id}`, { method: 'DELETE' });
         }
-    }, [board]);
+    }, []);
 
-    const handleDeleteProject = useCallback(async () => {
-        if (!board) return;
-        try {
-            const res = await fetch(`/api/projects/${board.id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete project');
-            router.push('/'); // Redirect on success
-        } catch (e) {
-            setError('Failed to delete project.');
-            throw e;
-        }
-    }, [board, router]);
-
-    const handleCreateList = useCallback(async (title: string) => {
-        if (!board) return;
-        try {
-            const res = await fetch('/api/lists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ project_id: board.id, title })
-            });
-            if (!res.ok) throw new Error('Failed to create list');
-            const newList: List = await res.json();
-            
-            setBoard(currentBoard => ({ ...currentBoard!, lists: [...currentBoard!.lists, newList] }));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred');
-            throw err;
-        }
-    }, [board]);
-
-    const handleEditList = useCallback(async (listId: string, newTitle: string) => {
-        if (!board) return;
-        const oldTitle = board.lists.find(l => l.id === listId)?.title;
-        if (!oldTitle || oldTitle === newTitle) return;
-
-        const oldLists = board.lists;
-        const newLists = board.lists.map(l => l.id === listId ? { ...l, title: newTitle } : l);
-        setBoard({ ...board, lists: newLists }); // Optimistic
-
-        try {
-            const res = await fetch(`/api/lists/${listId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle }) });
-            if (!res.ok) throw new Error('Failed to update list title');
-        } catch (e) {
-            setError('Failed to save list name. Reverting.');
-            setBoard(currentBoard => ({ ...currentBoard!, lists: oldLists })); // Rollback
-            throw e;
-        }
-    }, [board]);
-
-    const handleConfirmDeleteList = useCallback(async (listToDelete: List) => {
-        if (!board) return;
-        const listId = listToDelete.id;
-        
-        const oldLists = board.lists;
-        const newLists = oldLists.filter(l => l.id !== listId);
-        setBoard({ ...board, lists: newLists }); // Optimistic
-
-        try {
-            const res = await fetch(`/api/lists/${listId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete list');
-        } catch (e) {
-            setError('Failed to delete list. Reverting.');
-            setBoard(currentBoard => ({ ...currentBoard!, lists: oldLists })); // Rollback
-            throw e;
-        }
-    }, [board]);
-
-
-    // =================================================================
-    // CARD CRUD HANDLERS
-    // =================================================================
-
-    const handleCreateCard = useCallback(async (listId: string, newCardData: { title: string, description: string | null, priority: Priority | null, due_date: string | null }) => {
-        if (!board) return;
-        
+    const handleCreateCard = useMutation(async ({ storage }, listId: string, cardData: any) => {
         const res = await fetch('/api/cards', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...newCardData, list_id: listId, project_id: board.id })
+            body: JSON.stringify({ ...cardData, list_id: listId, project_id: id })
         });
+        const newCard = await res.json();
 
-        if (!res.ok) throw new Error('Failed to create card');
-
-        const newCard: Card = await res.json();
-
-        // Use strictly immutable array push logic to prevent state corruption/doubling
-        setBoard(currentBoard => {
-            if (!currentBoard) return null;
-            const newLists = currentBoard.lists.map(list => {
-                if (list.id === listId) {
-                    return {
-                        ...list,
-                        cards: [...list.cards, newCard] // Strictly immutable array push
-                    };
-                }
-                return list;
-            });
-            return { ...currentBoard, lists: newLists };
-        });
-    }, [board]);
-
-    const handleUpdateCard = useCallback(async (cardId: string, updates: { [key: string]: any }) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board)); 
-
-        updateCardOptimistic(cardId, updates); // Optimistic Update
-
-        try {
-            const res = await fetch(`/api/cards/${cardId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
-            if (!res.ok) throw new Error('Failed to update card');
-        } catch (err) {
-            setError("Failed to save card. Reverting.");
-            setBoard(oldBoard); // Rollback
-            const oldCard = oldBoard.lists.flatMap((l: List) => l.cards).find((c: Card) => c.id === cardId);
-            setSelectedCard(oldCard || null);
-            throw err;
+        const lists = storage.get("lists");
+        for (const l of lists) {
+             if (l.get("id") === listId) {
+                 l.get("cards").push(new LiveObject({
+                    ...newCard,
+                    description: newCard.description || null,
+                    priority: newCard.priority || null,
+                    due_date: newCard.due_date || null,
+                    list_id: listId,
+                    checklists: new LiveList([]),
+                    activity: new LiveList([])
+                }));
+                 return;
+             }
         }
-    }, [board, updateCardOptimistic]);
+    }, [id]);
 
-    const handleDeleteCard = useCallback(async (cardId: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board)); 
+    const handleUpdateCard = useMutation(async ({ storage }, cardId: string, updates: Partial<Card>) => {
+        const lists = storage.get("lists");
         
-        // 1. Optimistic Update (Remove from UI)
-        setSelectedCard(null); 
-        setBoard(currentBoard => {
-            if (!currentBoard) return null;
-            const newBoard = { ...currentBoard };
-            newBoard.lists = newBoard.lists.map(list => {
-                list.cards = list.cards.filter(c => c.id !== cardId);
-                return list;
-            });
-            return newBoard;
-        });
-
-        // 2. API Call & Rollback
-        try {
-            const res = await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete card');
-        } catch (err) {
-            setError("Failed to delete card. Reverting.");
-            setBoard(oldBoard); // Rollback
-            throw err;
-        }
-    }, [board]);
-
-
-    // =================================================================
-    // ACTIVITY (COMMENT) HANDLERS
-    // =================================================================
-
-    const handleAddComment = useCallback(async (cardId: string, content: string): Promise<Activity | null> => {
-        try {
-            // 1. API Call first (to get the generated ID and timestamp)
-            const res = await fetch('/api/comments', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ card_id: cardId, content: content }),
-            });
-            if (!res.ok) throw new Error('Failed to post comment');
-            const newActivity: Activity = await res.json();
-            
-            // 2. Optimistic Update (using functional update to avoid type mismatch)
-            setBoard(currentBoard => {
-                if (!currentBoard) return null;
-                return updateCardInBoardState(currentBoard, cardId, (card) => {
-                    // Correctly merge the new activity into the activities array
-                    card.activity = [newActivity, ...(card.activity || [])]; 
-                    return card;
-                });
-            });
-
-            // 3. Sync selected card state
-            setSelectedCard(prevCard => {
-                if (!prevCard || prevCard.id !== cardId) return prevCard;
-                const newActivityList = [newActivity, ...(prevCard.activity || [])];
-                return { ...prevCard, activity: newActivityList };
-            });
-            
-            return newActivity;
-
-        } catch (err) {
-            setError("Failed to post comment.");
-            return null;
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    card.update(updates as any); 
+                    await fetch(`/api/cards/${cardId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updates),
+                    }).catch(e => setError("Failed to save card update"));
+                    return;
+                }
+            }
         }
     }, []);
 
+    const handleDeleteCard = useMutation(async ({ storage }, cardId: string) => {
+         const lists = storage.get("lists");
+         for (const list of lists) {
+             const cards = list.get("cards");
+             const index = cards.findIndex((c) => c.get("id") === cardId);
+             if (index !== -1) {
+                 cards.delete(index);
+                 await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
+                 return;
+             }
+         }
+    }, []);
 
-    // =================================================================
-    // CHECKLIST HANDLERS
-    // =================================================================
+    // --- FIXED DND HANDLER ---
+    const handleDragEndWrapper = useMutation(async ({ storage }, result: DropResult) => {
+        const { source, destination, type, draggableId } = result;
+        if (!destination) return;
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    const handleAddChecklist = useCallback(async (cardId: string, title: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        try {
-            const res = await fetch('/api/checklists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ card_id: cardId, title: title }),
-            });
-            if (!res.ok) throw new Error('Failed to create checklist');
-            const newChecklist: Checklist = await res.json();
+        const lists = storage.get("lists");
+        let apiCall: Promise<Response> | null = null;
+
+        // --- CASE 1: MOVING A LIST ---
+        if (type === 'list') {
+            // FIX: Use .move() instead of delete/insert to avoid "already attached" error
+            lists.move(source.index, destination.index);
             
-            // Optimistic Update
-            setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-                 card.checklists = [...(card.checklists || []), newChecklist];
-                 return card;
-            }));
+            // Update position field
+            const list = lists.get(destination.index);
+            if (list) {
+                const currentItems = lists.toArray().map(l => ({ position: l.get("position") }));
+                const newPos = getNewPosition(currentItems, destination.index);
+                list.set("position", newPos);
 
-            setSelectedCard(prevCard => ({ ...prevCard!, checklists: [...(prevCard!.checklists || []), newChecklist] }));
-
-        } catch (err) {
-            setError("Failed to add checklist. Reverting.");
-            setBoard(oldBoard);
-            throw err; 
-        }
-    }, [board]);
-
-    const handleDeleteChecklist = useCallback(async (cardId: string, checklistId: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        
-        // Optimistic Update
-        setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-             card.checklists = card.checklists.filter(cl => cl.id !== checklistId);
-             return card;
-        }));
-        setSelectedCard(prevCard => ({ ...prevCard!, checklists: prevCard!.checklists.filter(cl => cl.id !== checklistId) }));
-
-        try {
-            const res = await fetch(`/api/checklists/${checklistId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete checklist');
-        } catch (err) {
-            setError("Failed to delete checklist. Reverting.");
-            setBoard(oldBoard); // Rollback
-            throw err;
-        }
-    }, [board]);
-
-    const handleUpdateChecklistTitle = useCallback(async (cardId: string, checklistId: string, newTitle: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        
-        // Optimistic Update
-        setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-             const checklist = card.checklists.find(cl => cl.id === checklistId);
-             if (checklist) checklist.title = newTitle;
-             return card;
-        }));
-        setSelectedCard(prevCard => {
-            const checklist = prevCard!.checklists.find(cl => cl.id === checklistId);
-            if (checklist) checklist.title = newTitle;
-            return { ...prevCard! };
-        });
-
-        try {
-            const res = await fetch(`/api/checklists/${checklistId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: newTitle }),
-            });
-            if (!res.ok) throw new Error('Failed to update checklist title');
-        } catch (err) {
-            setError("Failed to save checklist title. Reverting.");
-            setBoard(oldBoard);
-            throw err;
-        }
-    }, [board]);
-
-
-    // =================================================================
-    // CHECKLIST ITEM HANDLERS
-    // =================================================================
-
-    const handleAddChecklistItem = useCallback(async (cardId: string, checklistId: string, text: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        try {
-            const res = await fetch('/api/checklist-items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ checklist_id: checklistId, text: text }),
-            });
-            if (!res.ok) throw new Error('Failed to create item');
+                apiCall = fetch(`/api/lists/${draggableId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position: newPos })
+                });
+            }
+        } 
+        // --- CASE 2: MOVING A CARD ---
+        else if (type === 'card') {
+            const sourceListIndex = lists.findIndex(l => l.get("id") === source.droppableId);
+            const destListIndex = lists.findIndex(l => l.get("id") === destination.droppableId);
             
-            const newItem: ChecklistItem = await res.json();
-            
-            // Optimistic Update
-            setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-                 const checklist = card.checklists.find(cl => cl.id === checklistId);
-                 if (checklist) checklist.items = [...(checklist.items || []), newItem];
-                 return card;
-            }));
-            setSelectedCard(prevCard => {
-                const checklist = prevCard!.checklists.find(cl => cl.id === checklistId);
-                if (checklist) checklist.items = [...(checklist.items || []), newItem];
-                return { ...prevCard! };
-            });
+            if (sourceListIndex === -1 || destListIndex === -1) return;
 
-        } catch (err) {
-            setError("Failed to add checklist item. Reverting.");
-            setBoard(oldBoard);
-            throw err;
+            const sourceList = lists.get(sourceListIndex);
+            const destList = lists.get(destListIndex);
+            const sourceCards = sourceList?.get("cards");
+            const destCards = destList?.get("cards");
+
+            if (!sourceCards || !destCards) return;
+
+            // Calculate new position FIRST
+            const currentDestItems = destCards.toArray().map(c => ({ position: c.get("position") }));
+            // Note: If moving to same list, we need to account for index shift if we calculated before move. 
+            // But getNewPosition handles index logic usually.
+            const newPos = getNewPosition(currentDestItems, destination.index);
+
+            if (source.droppableId === destination.droppableId) {
+                // --- SAME LIST: Use .move() ---
+                sourceCards.move(source.index, destination.index);
+                
+                const card = sourceCards.get(destination.index);
+                card?.set("position", newPos);
+                
+                apiCall = fetch(`/api/cards/${draggableId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position: newPos })
+                });
+            } else {
+                // --- DIFFERENT LIST: Must Clone and Insert ---
+                const oldCard = sourceCards.get(source.index);
+                if (!oldCard) return;
+
+                // 1. Create a FULL CLONE of the card structure
+                // We cannot just move the LiveObject because it's attached to the old list.
+                const newCard = new LiveObject({
+                    id: oldCard.get("id"),
+                    title: oldCard.get("title"),
+                    description: oldCard.get("description"),
+                    priority: oldCard.get("priority"),
+                    due_date: oldCard.get("due_date"),
+                    list_id: destination.droppableId, // Update List ID
+                    position: newPos,                 // Update Position
+                    // Clone Nested LiveLists deeply
+                    checklists: new LiveList(
+                        oldCard.get("checklists").map(cl => new LiveObject({
+                            id: cl.get("id"),
+                            title: cl.get("title"),
+                            position: cl.get("position"),
+                            items: new LiveList(cl.get("items").map(i => new LiveObject({ ...i.toObject() })))
+                        }))
+                    ),
+                    activity: new LiveList(
+                        oldCard.get("activity").map(a => new LiveObject({ ...a.toObject() }))
+                    )
+                });
+
+                // 2. Delete from Source
+                sourceCards.delete(source.index);
+
+                // 3. Insert into Destination
+                destCards.insert(newCard, destination.index);
+
+                apiCall = fetch(`/api/cards/${draggableId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position: newPos, list_id: destination.droppableId })
+                });
+            }
         }
-    }, [board]);
+        if (apiCall) await apiCall.catch(e => console.error("Failed to sync drag", e));
+    }, []);
 
-    const handleUpdateChecklistItem = useCallback(async (cardId: string, checklistId: string, itemId: string, updates: { text?: string; is_done?: boolean }) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        
-        // Optimistic Update
-        setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-             const checklist = card.checklists.find(cl => cl.id === checklistId);
-             if (checklist) {
-                 const item = checklist.items.find(i => i.id === itemId);
-                 if (item) Object.assign(item, updates);
-             }
-             return card;
-        }));
-        setSelectedCard(prevCard => {
-             const checklist = prevCard!.checklists.find(cl => cl.id === checklistId);
-             if (checklist) {
-                 const item = checklist.items.find(i => i.id === itemId);
-                 if (item) Object.assign(item, updates);
-             }
-             return { ...prevCard! };
+    const handleAddComment = useMutation(async ({ storage }, cardId: string, content: string) => {
+        const res = await fetch('/api/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: cardId, content: content }),
         });
+        const newActivity: Activity = await res.json();
 
-        try {
-            const res = await fetch(`/api/checklist-items/${itemId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
-            if (!res.ok) throw new Error('Failed to update item');
-        } catch (err) {
-            setError("Failed to update item. Reverting.");
-            setBoard(oldBoard);
-            throw err;
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const activityList = card.get("activity");
+                    activityList.insert(new LiveObject({
+                        id: newActivity.id,
+                        user_id: newActivity.user_id,
+                        type: newActivity.type,
+                        content: newActivity.content,
+                        created_at: newActivity.created_at,
+                        user_username: newActivity.user_username || null,
+                        user_avatar_url: newActivity.user_avatar_url || null
+                    }), 0);
+                    return newActivity;
+                }
+            }
         }
-    }, [board]);
+        return newActivity;
+    }, []);
 
-    const handleDeleteChecklistItem = useCallback(async (cardId: string, checklistId: string, itemId: string) => {
-        if (!board) return;
-        const oldBoard = JSON.parse(JSON.stringify(board));
-        
-        // Optimistic Update
-        setBoard(currentBoard => updateCardInBoardState(currentBoard!, cardId, (card) => {
-             const checklist = card.checklists.find(cl => cl.id === checklistId);
-             if (checklist) {
-                 checklist.items = checklist.items.filter(i => i.id !== itemId);
-             }
-             return card;
-        }));
-        setSelectedCard(prevCard => {
-             const checklist = prevCard!.checklists.find(cl => cl.id === checklistId);
-             if (checklist) {
-                 checklist.items = checklist.items.filter(i => i.id !== itemId);
-             }
-             return { ...prevCard! };
+    const handleAddChecklist = useMutation(async ({ storage }, cardId: string, title: string) => {
+        const res = await fetch('/api/checklists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: cardId, title: title }),
         });
+        const newChecklist: Checklist = await res.json();
 
-        try {
-            const res = await fetch(`/api/checklist-items/${itemId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete item');
-        } catch (err) {
-            setError("Failed to delete item. Reverting.");
-            setBoard(oldBoard);
-            throw err;
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    card.get("checklists").push(new LiveObject({
+                        id: newChecklist.id,
+                        title: newChecklist.title,
+                        position: newChecklist.position,
+                        items: new LiveList([])
+                    }));
+                    return;
+                }
+            }
         }
-    }, [board]);
+    }, []);
 
+    const handleDeleteChecklist = useMutation(async ({ storage }, cardId: string, checklistId: string) => {
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const checklists = card.get("checklists");
+                    const index = checklists.findIndex((cl) => cl.get("id") === checklistId);
+                    if (index !== -1) {
+                        checklists.delete(index);
+                        await fetch(`/api/checklists/${checklistId}`, { method: 'DELETE' });
+                    }
+                    return;
+                }
+            }
+        }
+    }, []);
 
-    // =================================================================
-    // EXPOSE THE CLEAN INTERFACE
-    // =================================================================
+    const handleUpdateChecklistTitle = useMutation(async ({ storage }, cardId: string, checklistId: string, newTitle: string) => {
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const checklist = card.get("checklists").toArray().find((cl) => cl.get("id") === checklistId);
+                    if (checklist) {
+                        checklist.set("title", newTitle);
+                        await fetch(`/api/checklists/${checklistId}`, { 
+                            method: 'PATCH', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ title: newTitle }) 
+                        });
+                        return;
+                    }
+                }
+            }
+        }
+    }, []);
+
+    const handleAddChecklistItem = useMutation(async ({ storage }, cardId: string, checklistId: string, text: string) => {
+        const res = await fetch('/api/checklist-items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checklist_id: checklistId, text: text }),
+        });
+        const newItem: ChecklistItem = await res.json();
+
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const checklist = card.get("checklists").toArray().find((cl) => cl.get("id") === checklistId);
+                    if (checklist) {
+                        checklist.get("items").push(new LiveObject({
+                            id: newItem.id,
+                            text: newItem.text,
+                            is_done: newItem.is_done,
+                            position: newItem.position
+                        }));
+                        return;
+                    }
+                }
+            }
+        }
+    }, []);
+
+    const handleUpdateChecklistItem = useMutation(async ({ storage }, cardId: string, checklistId: string, itemId: string, updates: any) => {
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const checklist = card.get("checklists").toArray().find((cl) => cl.get("id") === checklistId);
+                    if (checklist) {
+                        const item = checklist.get("items").toArray().find((i) => i.get("id") === itemId);
+                        if (item) {
+                            item.update(updates);
+                            await fetch(`/api/checklist-items/${itemId}`, { 
+                                method: 'PATCH', 
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify(updates) 
+                            });
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }, []);
+
+    const handleDeleteChecklistItem = useMutation(async ({ storage }, cardId: string, checklistId: string, itemId: string) => {
+        const lists = storage.get("lists");
+        for (const list of lists) {
+            const cards = list.get("cards");
+            for (const card of cards) {
+                if (card.get("id") === cardId) {
+                    const checklists = card.get("checklists").toArray().find((cl) => cl.get("id") === checklistId);
+                    if (checklists) {
+                        const items = checklists.get("items");
+                        const index = items.findIndex((i) => i.get("id") === itemId);
+                        if (index !== -1) {
+                            items.delete(index);
+                            await fetch(`/api/checklist-items/${itemId}`, { method: 'DELETE' });
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }, []);
+
     return {
-        // State
-        board, 
-        loading, 
-        error, 
+        board: board as Project | null,
+        loading: board === null,
+        error,
         setError,
-        setBoard,
-        selectedCard, 
+        setBoard: () => console.warn("setBoard deprecated"),
+        selectedCard: activeCard || selectedCard, 
         currentListTitle,
-        // Card/Modal Actions
-        handleCardClick,
         closeCardModal,
+        handleCardClick,
+        handleDragEndWrapper,
         handleUpdateCard,
         handleDeleteCard,
         handleCreateCard,
@@ -634,9 +519,6 @@ export const useBoardData = (id: string | undefined) => {
         handleAddChecklistItem,
         handleUpdateChecklistItem,
         handleDeleteChecklistItem,
-        // DND
-        handleDragEndWrapper,
-        // Project/List Actions
         handleProjectUpdate,
         handleDeleteProject,
         handleCreateList,
